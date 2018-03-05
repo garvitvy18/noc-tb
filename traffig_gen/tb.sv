@@ -7,7 +7,6 @@ module tb ();
 
    logic clk;
    logic rstn;
-   logic en;
    logic snd_complete;
    logic rcv_complete;
    logic test_error;
@@ -22,7 +21,6 @@ module tb ();
    initial begin
       rstn = 1'b0;
       #(10*CLK_PERIOD) rstn = 1'b1;
-      # CLK_PERIOD en = 1'b1;
    end
 
    initial begin
@@ -48,7 +46,7 @@ module tb ();
       end
    end
 
-   gen traffic_gen (.clk(clk), .rstn(rstn), .en(en),
+   gen traffic_gen (.clk(clk), .rstn(rstn),
 		    .snd_complete(snd_complete),
 		    .rcv_complete(rcv_complete),
 		    .test_error(test_error));

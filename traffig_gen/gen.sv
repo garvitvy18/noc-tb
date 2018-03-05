@@ -5,7 +5,6 @@ module gen
   (
    input logic 	clk,
    input logic 	rstn,
-   input logic 	en,
 
    output logic snd_complete,
    output logic rcv_complete,
@@ -127,6 +126,7 @@ module gen
    logic [0:TILES_NUM-1][0:TILES_NUM-1] match_sndrcv;    // Both packed
    logic [0:TILES_NUM-1][0:TILES_NUM-1] mismatch_sndrcv;    // Both packed
 
+   (* KEEP = "TRUE" *) logic [63:0] 			latency;
 
    logic				incr_snd_count[0:TILES_NUM-1];
    logic [0:TILES_NUM-1] 		incr_total_snd[0:TILES_NUM-1];
@@ -139,9 +139,20 @@ module gen
    logic 	output_req[TILES_NUM-1:0];
    logic 	output_ack[TILES_NUM-1:0];
 
+   logic 	en;
+
    genvar 	i, j;
 
    // Traffic Generator --> Begin
+
+   // Enable traffic generation after reset
+   always_ff @(posedge clk)
+     if (rstn == 1'b0)
+       en <= 1'b0;
+     else
+       en <= 1'b1;
+
+
    generate
 
       for (i = 0; i < TILES_NUM; i++) begin
@@ -361,5 +372,22 @@ module gen
       end // for (i = 0; i < TILES_NUM; i++)
 
    endgenerate
+
+   // Measure latency (try output this 
+   always_ff @(posedge clk) begin
+      if (rstn == 1'b0) begin
+	 latency <= 0;
+      end
+      else begin
+	 if (en == 1'b1 && rcv_complete == 1'b0) begin
+	    latency <= latency + 1;
+	 end
+      end
+   end
+
+   always_comb begin
+      if (rcv_complete == 1'b1)
+	$display("Total latency is %d", latency);
+   end
 
 endmodule // gen
