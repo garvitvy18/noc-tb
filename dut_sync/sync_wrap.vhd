@@ -78,11 +78,11 @@ begin
       mon_noc       => mon_noc);
 
   input_port      <= input_data_i;
-  data_void_in    <= (not input_req_i) or stop_out;
-  input_ack_o     <= input_req_i and (not stop_out);
+  data_void_in    <= not input_req_i;
+  input_ack_o     <= not stop_out;
 
   output_data_o   <= output_port;
   output_req_o    <= not data_void_out;
-  stop_in         <= data_void_out nor output_ack_i;
+  stop_in         <= not output_ack_i;
 
 end;

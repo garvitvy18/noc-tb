@@ -8,6 +8,9 @@ module tb ();
    logic clk;
    logic rstn;
    logic en;
+   logic snd_complete;
+   logic rcv_complete;
+   logic test_error;
 
    initial begin
       clk = 1'b0;
@@ -19,10 +22,35 @@ module tb ();
    initial begin
       rstn = 1'b0;
       #(10*CLK_PERIOD) rstn = 1'b1;
-      #CLK_PERIOD en = 1'b1;
-      #(100*CLK_PERIOD) $stop;
+      # CLK_PERIOD en = 1'b1;
    end
 
-   gen traffic_gen (.clk(clk), .rstn(rstn), .en(en));
+   initial begin
+      forever begin
+	 # CLK_PERIOD ;
+	 if (snd_complete == 1'b1) begin
+	    $display("All flits have been sent");
+	    break;
+	 end
+      end
+
+      // Allow all packets to be delivered
+      # (1024*CLK_PERIOD) ;
+
+      if (rcv_complete == 1'b1) begin
+	 $display("All flits have been received");
+	 $stop;
+      end
+
+      if (test_error == 1'b1) begin
+	 $display("Test error!");
+	 $stop;
+      end
+   end
+
+   gen traffic_gen (.clk(clk), .rstn(rstn), .en(en),
+		    .snd_complete(snd_complete),
+		    .rcv_complete(rcv_complete),
+		    .test_error(test_error));
 
 endmodule

@@ -3,15 +3,26 @@ import nocpackage::*;
 
 module gen
   (
-   input logic clk,
-   input logic rstn,
-   input logic en
+   input logic 	clk,
+   input logic 	rstn,
+   input logic 	en,
+
+   output logic snd_complete,
+   output logic rcv_complete,
+   output logic test_error
+
    );
 
+   // Injected flits per tile (power of 2 only)
+   localparam MAX_SND_COUNT = 512;
+
+   // Packet size in flits (power of 2 and >= MAX_SND_COUNT)
+   localparam PKT_SIZE = 4;
+
+   // NoC Size --> Begin
    localparam XLEN = 4;
    localparam YLEN = 4;
    localparam TILES_NUM = XLEN * YLEN;
-   localparam MAX_SND_COUNT = 4;
 
    const yx_vec tile_x[0:TILES_NUM - 1]
      = {
@@ -52,20 +63,9 @@ module gen
 	3'b011,
 	3'b011
 	};
+   // NoC Size --> End
 
-   logic [63:0] psr_state[0:TILES_NUM-1];
-   logic [63:0] psr_state_next[0:TILES_NUM-1];
-   logic [63:0] psr_next[0:TILES_NUM-1];
-   logic [$clog2(TILES_NUM)-1:0] dst_next[0:TILES_NUM-1];
-   logic [$clog2(MAX_SND_COUNT):0] snd_count[0:TILES_NUM-1];
-
-   noc_flit_vector input_data[TILES_NUM-1:0];
-   logic 	input_req[TILES_NUM-1:0];
-   logic 	input_ack[TILES_NUM-1:0];
-   noc_flit_vector output_data[TILES_NUM-1:0];
-   logic 	output_req[TILES_NUM-1:0];
-   logic 	output_ack[TILES_NUM-1:0];
-
+   // Helper function
    function noc_flit_type create_header
      (
       local_yx local_y,
@@ -109,8 +109,39 @@ module gen
       return header;
    endfunction
 
-   genvar 	i;
 
+   // Local registers and counters
+   logic [63:0] psr_state[0:TILES_NUM-1];
+   logic [63:0] psr_state_next[0:TILES_NUM-1];
+   logic [63:0] psr_next[0:TILES_NUM-1];
+   logic [$clog2(TILES_NUM)-1:0] dst_next[0:TILES_NUM-1];
+   logic [$clog2(TILES_NUM)-1:0] dst_current[0:TILES_NUM-1];
+   logic [$clog2(TILES_NUM)-1:0] src_next[0:TILES_NUM-1];
+   logic [$clog2(TILES_NUM)-1:0] src_current[0:TILES_NUM-1];
+   logic [31:0] snd_count[0:TILES_NUM-1];
+   logic [0:TILES_NUM-1] snd_done;
+   logic 	new_packet[0:TILES_NUM-1];
+   logic 	new_flit[0:TILES_NUM-1];
+   logic [0:TILES_NUM-1][31:0] total_snd[0:TILES_NUM-1]; // unpacked sender / packed receiver
+   logic [0:TILES_NUM-1][31:0] total_rcv[0:TILES_NUM-1]; // unpacked receiver / packed sender
+   logic [0:TILES_NUM-1][0:TILES_NUM-1] match_sndrcv;    // Both packed
+   logic [0:TILES_NUM-1][0:TILES_NUM-1] mismatch_sndrcv;    // Both packed
+
+
+   logic				incr_snd_count[0:TILES_NUM-1];
+   logic [0:TILES_NUM-1] 		incr_total_snd[0:TILES_NUM-1];
+   logic 				sample_dst[0:TILES_NUM-1];
+
+   noc_flit_vector input_data[TILES_NUM-1:0];
+   logic 	input_req[TILES_NUM-1:0];
+   logic 	input_ack[TILES_NUM-1:0];
+   noc_flit_vector output_data[TILES_NUM-1:0];
+   logic 	output_req[TILES_NUM-1:0];
+   logic 	output_ack[TILES_NUM-1:0];
+
+   genvar 	i, j;
+
+   // Traffic Generator --> Begin
    generate
 
       for (i = 0; i < TILES_NUM; i++) begin
@@ -146,54 +177,125 @@ module gen
 	 end
 
 	 // Send flit
+	 always_comb begin
+	    input_req[i] = 1'b0; // No request by default
+	    input_data[i] = 0;
+	    incr_snd_count[i] = 1'b0;
+	    incr_total_snd[i] = '0;
+	    sample_dst[i] = 1'b0;
+
+	    if (en == 1'b1 && snd_count[i] < MAX_SND_COUNT) begin
+
+	       if (PKT_SIZE == 1) begin
+		  // Send single-flit packet
+		  if (input_ack[i] == 1'b1) begin
+		     incr_snd_count[i] = 1'b1;
+		     incr_total_snd[i][dst_next[i]] = 1'b1;
+		     sample_dst[i] = 1'b1;
+		     input_req[i] = 1'b1;
+		     input_data[i] = create_header(tile_y[i],
+						   tile_x[i],
+						   tile_y[dst_next[i]],
+						   tile_x[dst_next[i]],
+						   interrupt,
+						   snd_count[i][reserved_width-1:0]);
+		     input_data[i][noc_flit_size-1:noc_flit_size-2] = preamble_1flit;
+		     $display("%t: Tile %d - Send %d", $time, i, dst_next[i]);
+		  end // if (input_ack[i])
+	       end // if (PKT_SIZE == 1)
+	       else begin
+		  if (| snd_count[i][$clog2(PKT_SIZE)-1:0] == 1'b0) begin
+		     // Send header
+		     if (input_ack[i] == 1'b1) begin
+			incr_snd_count[i] = 1'b1;
+			incr_total_snd[i][dst_next[i]] = 1'b1;
+			sample_dst[i] = 1'b1;
+			input_req[i] = 1'b1;
+			input_data[i] = create_header(tile_y[i],
+						      tile_x[i],
+						      tile_y[dst_next[i]],
+						      tile_x[dst_next[i]],
+						      interrupt,
+						      snd_count[i][reserved_width-1:0]);
+			$display("%t: Tile %d - Send %d", $time, i, dst_next[i]);
+ 		     end // if (input_ack[i])
+		  end // if (| snd_count[i][$clog2(PKT_SIZE)-1:0] == 1'b0)
+		  else if (& snd_count[i][$clog2(PKT_SIZE)-1:0] == 1'b1) begin
+		     // Send tail
+		     if (input_ack[i] == 1'b1) begin
+			incr_snd_count[i] = 1'b1;
+			incr_total_snd[i][dst_current[i]] = 1'b1;
+		     	input_req[i] = 1'b1;
+		     	input_data[i][noc_flit_size-1:noc_flit_size-2] = preamble_tail;
+		     	input_data[i][noc_flit_size-3:0] = snd_count[i];
+		     end
+		  end
+		  else begin
+		     // Send body
+		     if (input_ack[i] == 1'b1) begin
+			incr_snd_count[i] = 1'b1;
+			incr_total_snd[i][dst_current[i]] = 1'b1;
+		     	input_req[i] = 1'b1;
+		     	input_data[i][noc_flit_size-1:noc_flit_size-2] = preamble_body;
+		     	input_data[i][noc_flit_size-3:0] = snd_count[i];
+		     end
+		  end // else: !if(& snd_count[i][$clog2(PKT_SIZE)-1:0] == 1'b1)
+
+	       end // else: !if(PKT_SIZE == 1)
+
+	    end // if (en == 1'b1 && snd_count[i] < MAX_SND_COUNT)
+
+	 end // always_comb
+
 	 always_ff @(posedge clk or negedge rstn) begin
 	    if (rstn == 1'b0) begin
 	       snd_count[i] <= 0;
-	       input_data[i] <= 0;
-	       input_req[i] <= 1'b0;
+	       dst_current[i] <= 0;
 	    end
 	    else begin
-	       input_req[i] <= 1'b0; // No request by default
-
-	       if (i == 0) begin // TODO: remove
-		  if (en == 1'b1 && snd_count[i] < MAX_SND_COUNT) begin
-
-		     // if (snd_count[i][0] == 1'b0) begin
-		     // 	// Send header
-			if (~input_req[i] || input_ack[i]) begin
-			   snd_count[i] <= snd_count[i] + 1;
-			   input_req[i] <= 1'b1;
-			   input_data[i] <= 34'h300000000 |
-					    create_header(tile_y[i],
-							  tile_x[i],
-							  tile_y[dst_next[i]],
-							  tile_x[dst_next[i]],
-							  interrupt,
-							  'b0000);
-			   $display("%t: Tile %d - Send %d", $time, i, dst_next[i]);
-			end
-		     // end
-		     // else begin
-		     // 	// Send tail
-		     // 	if (~input_req[i] || input_ack[i]) begin
-		     // 	   snd_count[i] <= snd_count[i] + 1;
-		     // 	   input_req[i] <= 1'b1;
-		     // 	   input_data[i][noc_flit_size-1:noc_flit_size-2] <= 2'b01;
-		     // 	end
-		     // end
-
-		  end // if (en == 1'b1 && snd_count[i] < MAX_SND_COUNT)
-	       end // if (i == 0)
+	       if (sample_dst[i] == 1'b1) begin
+		  dst_current[i] <= dst_next[i];
+	       end
+	       if (incr_snd_count[i] == 1'b1) begin
+		 snd_count[i] <= snd_count[i] + 1;
+	       end
 	    end // else: !if(rstn == 1'b0)
 	 end // always_ff @
 
+	 for (j = 0; j < TILES_NUM; j++) begin
+	    always_ff @(posedge clk or negedge rstn) begin
+	       if (rstn == 1'b0) begin
+		  total_snd[i][j] <= 0;
+	       end
+	       else begin
+		  if (incr_total_snd[i][j] == 1'b1) begin
+		     total_snd[i][j] = total_snd[i][j] + 1;
+		  end
+	       end
+	    end
+	 end
+
 	 // always accept incoming packets for now.
 	 assign output_ack[i] = 1'b1;
+	 assign new_flit[i] = output_req[i] & output_ack[i];
+	 assign new_packet[i] = output_data[i][noc_flit_size-1] & new_flit[i];
+	 assign src_next[i] = output_data[i][29:27] * XLEN + output_data[i][24:22];
 
 	 always_ff @(posedge clk) begin
-	    if (rstn != 1'b0) begin
-	       if (output_req[i] == 1'b1) begin
-		  $display("%t: Tile %d - Receiving data", $time, i);
+	    if (rstn == 1'b0) begin
+	       src_current[i] <= '0;
+	       total_rcv[i] <= '0;
+	    end
+	    else begin
+	       if (new_flit[i] == 1'b1) begin
+		  if (new_packet[i] == 1'b1) begin
+		     $display("%t: Tile %d - Receiving new packet", $time, i);
+		     src_current[i] <= src_next[i];
+		     total_rcv[i][src_next[i]] <= total_rcv[i][src_next[i]] + 1;
+		  end
+		  else begin
+		     total_rcv[i][src_current[i]] <= total_rcv[i][src_current[i]] + 1;
+		  end
 	       end
 	    end
 	 end
@@ -201,7 +303,7 @@ module gen
       end // for (i = 0; i < TILES_NUM; i++)
 
    endgenerate
-
+   // Traffic Generator --> End
 
    sync_wrap #(.XLEN(XLEN), .YLEN(YLEN), .TILES_NUM(TILES_NUM), .flit_size(noc_flit_size)) dut
      (
@@ -214,5 +316,50 @@ module gen
       .output_req_o(output_req),
       .output_ack_i(output_ack)
       );
+
+
+   // Check
+   assign snd_complete = & snd_done;
+   assign rcv_complete = & match_sndrcv;
+   assign test_error = | mismatch_sndrcv;
+
+   generate
+      for (i = 0; i < TILES_NUM; i++) begin
+
+	 always_ff @(posedge clk) begin
+	    if (rstn == 1'b0) begin
+	       snd_done[i] <= 1'b0;
+	    end
+	    else begin
+	    end
+	    if (snd_count[i] == MAX_SND_COUNT) begin
+	       snd_done[i] <= 1'b1;
+	    end
+	 end
+
+	 for (j = 0; j < TILES_NUM; j++) begin
+
+	    always_ff @(posedge clk) begin
+	       if (rstn == 1'b0) begin
+		  match_sndrcv[i][j] <= 1'b0;
+		  mismatch_sndrcv[i][j] <= 1'b0;
+	       end
+	       else begin
+		  if (snd_done[i] == 1'b1 && total_snd[i][j] == total_rcv[j][i]) begin
+		     match_sndrcv[i][j] <= 1'b1;
+		     mismatch_sndrcv[i][j] <= 1'b0;
+		  end
+		  if (snd_done[i] == 1'b1 && total_snd[i][j] != total_rcv[j][i]) begin
+		     match_sndrcv[i][j] <= 1'b0;
+		     mismatch_sndrcv[i][j] <= 1'b1;
+		  end
+	       end
+	    end
+
+	 end // for (j = 0; j < TILES_NUM; j++)
+
+      end // for (i = 0; i < TILES_NUM; i++)
+
+   endgenerate
 
 endmodule // gen
