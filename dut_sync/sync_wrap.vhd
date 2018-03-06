@@ -18,10 +18,10 @@ entity sync_wrap is
   port (
     clk           : in  std_logic;
     rstn          : in  std_logic;
-    input_data_i  : in  noc_flit_vector(TILES_NUM-1 downto 0);
+    input_data_i  : in  std_logic_vector(flit_size*TILES_NUM-1 downto 0);
     input_req_i   : in  std_logic_vector(TILES_NUM-1 downto 0);
     input_ack_o   : out std_logic_vector(TILES_NUM-1 downto 0);
-    output_data_o : out noc_flit_vector(TILES_NUM-1 downto 0);
+    output_data_o : out std_logic_vector(flit_size*TILES_NUM-1 downto 0);
     output_req_o  : out std_logic_vector(TILES_NUM-1 downto 0);
     output_ack_i  : in  std_logic_vector(TILES_NUM-1 downto 0)
     );
@@ -31,6 +31,9 @@ end sync_wrap;
 
 
 architecture rtl of sync_wrap is
+
+  signal input_data  : noc_flit_vector(TILES_NUM-1 downto 0);
+  signal output_data : noc_flit_vector(TILES_NUM-1 downto 0);
 
   component noc_xy is
     generic (
@@ -60,7 +63,7 @@ architecture rtl of sync_wrap is
 
 begin
 
-  noc_xy_1: entity work.noc_xy
+  noc_xy_1: noc_xy
     generic map (
       XLEN      => XLEN,
       YLEN      => YLEN,
@@ -77,12 +80,17 @@ begin
       stop_out      => stop_out,
       mon_noc       => mon_noc);
 
-  input_port      <= input_data_i;
+  input_port      <= input_data;
   data_void_in    <= not input_req_i;
   input_ack_o     <= not stop_out;
 
-  output_data_o   <= output_port;
+  output_data   <= output_port;
   output_req_o    <= not data_void_out;
   stop_in         <= not output_ack_i;
+
+  array_to_packed_vector: for i in TILES_NUM-1 downto 0 generate
+    output_data_o((i + 1) * flit_size - 1 downto i * flit_size) <= output_data(i);
+    input_data(i) <= input_data_i((i + 1) * flit_size - 1 downto flit_size * i);
+  end generate array_to_packed_vector;
 
 end;

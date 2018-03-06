@@ -38,48 +38,48 @@ module gen
    localparam NEXT_ROUTING_WIDTH = 5;
 
    // NoC Size --> Begin
-   localparam XLEN = 4;
-   localparam YLEN = 4;
+   localparam XLEN = 2;
+   localparam YLEN = 2;
    localparam TILES_NUM = XLEN * YLEN;
 
    const local_yx tile_x[0:TILES_NUM - 1]
      = {
 	3'b000,
 	3'b001,
-	3'b010,
-	3'b011,
+	// 3'b010,
+	// 3'b011,
 	3'b000,
-	3'b001,
-	3'b010,
-	3'b011,
-	3'b000,
-	3'b001,
-	3'b010,
-	3'b011,
-	3'b000,
-	3'b001,
-	3'b010,
-	3'b011
+	3'b001// ,
+	// 3'b010,
+	// 3'b011,
+	// 3'b000,
+	// 3'b001,
+	// 3'b010,
+	// 3'b011,
+	// 3'b000,
+	// 3'b001,
+	// 3'b010,
+	// 3'b011
 	};
 
    const local_yx tile_y[0:TILES_NUM - 1]
      = {
 	3'b000,
 	3'b000,
-	3'b000,
-	3'b000,
+	// 3'b000,
+	// 3'b000,
 	3'b001,
-	3'b001,
-	3'b001,
-	3'b001,
-	3'b010,
-	3'b010,
-	3'b010,
-	3'b010,
-	3'b011,
-	3'b011,
-	3'b011,
-	3'b011
+	3'b001// ,
+	// 3'b001,
+	// 3'b001,
+	// 3'b010,
+	// 3'b010,
+	// 3'b010,
+	// 3'b010,
+	// 3'b011,
+	// 3'b011,
+	// 3'b011,
+	// 3'b011
 	};
    // NoC Size --> End
 
@@ -152,11 +152,14 @@ module gen
    logic 				sample_dst[0:TILES_NUM-1];
 
    noc_flit_type input_data[TILES_NUM-1:0];
-   logic 	input_req[TILES_NUM-1:0];
-   logic 	input_ack[TILES_NUM-1:0];
+   logic [TILES_NUM-1:0] input_req;
+   logic [TILES_NUM-1:0] input_ack;
    noc_flit_type output_data[TILES_NUM-1:0];
-   logic 	output_req[TILES_NUM-1:0];
-   logic 	output_ack[TILES_NUM-1:0];
+   logic [TILES_NUM-1:0] output_req;
+   logic [TILES_NUM-1:0] output_ack;
+
+   logic [TILES_NUM * NOC_FLIT_SIZE - 1:0] input_data_packed;
+   logic [TILES_NUM * NOC_FLIT_SIZE - 1:0] output_data_packed;
 
    logic 	en;
 
@@ -330,6 +333,9 @@ module gen
 	    end
 	 end
 
+	 assign input_data_packed[(i + 1) * NOC_FLIT_SIZE - 1 : NOC_FLIT_SIZE * i] = input_data[i];
+	 assign output_data[i] = output_data_packed[(i + 1) * NOC_FLIT_SIZE - 1 : NOC_FLIT_SIZE * i];
+
       end // for (i = 0; i < TILES_NUM; i++)
 
    endgenerate
@@ -339,10 +345,10 @@ module gen
      (
       .clk(clk),
       .rstn(rstn),
-      .input_data_i(input_data),
+      .input_data_i(input_data_packed),
       .input_req_i(input_req),
       .input_ack_o(input_ack),
-      .output_data_o(output_data),
+      .output_data_o(output_data_packed),
       .output_req_o(output_req),
       .output_ack_i(output_ack)
       );
