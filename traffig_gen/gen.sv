@@ -1,6 +1,4 @@
 
-import nocpackage::*;
-
 module gen
   (
    input logic 	clk,
@@ -18,12 +16,33 @@ module gen
    // Packet size in flits (power of 2 and >= MAX_SND_COUNT)
    localparam PKT_SIZE = 4;
 
+   // NoC Parameters
+   localparam PREAMBLE_WIDTH = 2;
+   const logic [1:0] preamble_header = 2'b10;
+   const logic [1:0] preamble_body = 2'b00;
+   const logic [1:0] preamble_tail = 2'b01;
+   const logic [1:0] preamble_1flit = 2'b10;
+
+   localparam YX_WIDTH = 5;
+   typedef logic [2:0] local_yx;
+
+   localparam MSG_TYPE_WIDTH = 3;
+   typedef logic [MSG_TYPE_WIDTH-1:0] noc_msg_type;
+
+   localparam RESERVED_WIDTH = 3;
+   typedef logic [RESERVED_WIDTH-1:0] reserved_field_type;
+
+   localparam NOC_FLIT_SIZE = 34;
+   typedef logic [NOC_FLIT_SIZE-1:0] noc_flit_type;
+
+   localparam NEXT_ROUTING_WIDTH = 5;
+
    // NoC Size --> Begin
    localparam XLEN = 4;
    localparam YLEN = 4;
    localparam TILES_NUM = XLEN * YLEN;
 
-   const yx_vec tile_x[0:TILES_NUM - 1]
+   const local_yx tile_x[0:TILES_NUM - 1]
      = {
 	3'b000,
 	3'b001,
@@ -43,7 +62,7 @@ module gen
 	3'b011
 	};
 
-   const yx_vec tile_y[0:TILES_NUM - 1]
+   const local_yx tile_y[0:TILES_NUM - 1]
      = {
 	3'b000,
 	3'b000,
@@ -76,16 +95,16 @@ module gen
       );
 
       noc_flit_type header;
-      logic [next_routing_width-1:0] go_left, go_right, go_up, go_down;
+      logic [NEXT_ROUTING_WIDTH-1:0] go_left, go_right, go_up, go_down;
 
       header = 0;
-      header[noc_flit_size - 1 : noc_flit_size - preamble_width] = preamble_header;
-      header[noc_flit_size - preamble_width - 1 : noc_flit_size - preamble_width - yx_width] = {2'b00, local_y};
-      header[noc_flit_size - preamble_width - yx_width - 1 : noc_flit_size - preamble_width - 2*yx_width] = {2'b00, local_x};
-      header[noc_flit_size - preamble_width - 2*yx_width - 1 : noc_flit_size - preamble_width - 3*yx_width] = {2'b00, remote_y};
-      header[noc_flit_size - preamble_width - 3*yx_width - 1 : noc_flit_size - preamble_width - 4*yx_width] = {2'b00, remote_x};
-      header[noc_flit_size - preamble_width - 4*yx_width - 1 : noc_flit_size - preamble_width - 4*yx_width - msg_type_width] = msg_type;
-      header[noc_flit_size - preamble_width - 4*yx_width - msg_type_width - 1 : noc_flit_size - preamble_width - 4*yx_width - msg_type_width - reserved_width] = reserved;
+      header[NOC_FLIT_SIZE - 1 : NOC_FLIT_SIZE - PREAMBLE_WIDTH] = preamble_header;
+      header[NOC_FLIT_SIZE - PREAMBLE_WIDTH - 1 : NOC_FLIT_SIZE - PREAMBLE_WIDTH - YX_WIDTH] = {2'b00, local_y};
+      header[NOC_FLIT_SIZE - PREAMBLE_WIDTH - YX_WIDTH - 1 : NOC_FLIT_SIZE - PREAMBLE_WIDTH - 2*YX_WIDTH] = {2'b00, local_x};
+      header[NOC_FLIT_SIZE - PREAMBLE_WIDTH - 2*YX_WIDTH - 1 : NOC_FLIT_SIZE - PREAMBLE_WIDTH - 3*YX_WIDTH] = {2'b00, remote_y};
+      header[NOC_FLIT_SIZE - PREAMBLE_WIDTH - 3*YX_WIDTH - 1 : NOC_FLIT_SIZE - PREAMBLE_WIDTH - 4*YX_WIDTH] = {2'b00, remote_x};
+      header[NOC_FLIT_SIZE - PREAMBLE_WIDTH - 4*YX_WIDTH - 1 : NOC_FLIT_SIZE - PREAMBLE_WIDTH - 4*YX_WIDTH - MSG_TYPE_WIDTH] = msg_type;
+      header[NOC_FLIT_SIZE - PREAMBLE_WIDTH - 4*YX_WIDTH - MSG_TYPE_WIDTH - 1 : NOC_FLIT_SIZE - PREAMBLE_WIDTH - 4*YX_WIDTH - MSG_TYPE_WIDTH - RESERVED_WIDTH] = reserved;
 
       if (local_x < remote_x)
 	go_right = 'b01000;
@@ -98,12 +117,12 @@ module gen
 	go_left = 'b11011;
 
       if (local_y < remote_y)
-	header[next_routing_width - 1 : 0] = 'b01110 & go_left & go_right;
+	header[NEXT_ROUTING_WIDTH - 1 : 0] = 'b01110 & go_left & go_right;
       else
-	header[next_routing_width - 1 : 0] = 'b01101 & go_left & go_right;
+	header[NEXT_ROUTING_WIDTH - 1 : 0] = 'b01101 & go_left & go_right;
 
       if ((local_y == remote_y) && (local_x == remote_x))
-	header[next_routing_width - 1 : 0] = 'b1000;
+	header[NEXT_ROUTING_WIDTH - 1 : 0] = 'b1000;
 
       return header;
    endfunction
@@ -132,10 +151,10 @@ module gen
    logic [0:TILES_NUM-1] 		incr_total_snd[0:TILES_NUM-1];
    logic 				sample_dst[0:TILES_NUM-1];
 
-   noc_flit_vector input_data[TILES_NUM-1:0];
+   noc_flit_type input_data[TILES_NUM-1:0];
    logic 	input_req[TILES_NUM-1:0];
    logic 	input_ack[TILES_NUM-1:0];
-   noc_flit_vector output_data[TILES_NUM-1:0];
+   noc_flit_type output_data[TILES_NUM-1:0];
    logic 	output_req[TILES_NUM-1:0];
    logic 	output_ack[TILES_NUM-1:0];
 
@@ -208,9 +227,9 @@ module gen
 						   tile_x[i],
 						   tile_y[dst_next[i]],
 						   tile_x[dst_next[i]],
-						   interrupt,
-						   snd_count[i][reserved_width-1:0]);
-		     input_data[i][noc_flit_size-1:noc_flit_size-2] = preamble_1flit;
+						   3'b111,
+						   snd_count[i][RESERVED_WIDTH-1:0]);
+		     input_data[i][NOC_FLIT_SIZE-1:NOC_FLIT_SIZE-2] = preamble_1flit;
 		     $display("%t: Tile %d - Send %d", $time, i, dst_next[i]);
 		  end // if (input_ack[i])
 	       end // if (PKT_SIZE == 1)
@@ -226,8 +245,8 @@ module gen
 						      tile_x[i],
 						      tile_y[dst_next[i]],
 						      tile_x[dst_next[i]],
-						      interrupt,
-						      snd_count[i][reserved_width-1:0]);
+						      3'b111,
+						      snd_count[i][RESERVED_WIDTH-1:0]);
 			$display("%t: Tile %d - Send %d", $time, i, dst_next[i]);
  		     end // if (input_ack[i])
 		  end // if (| snd_count[i][$clog2(PKT_SIZE)-1:0] == 1'b0)
@@ -237,8 +256,8 @@ module gen
 			incr_snd_count[i] = 1'b1;
 			incr_total_snd[i][dst_current[i]] = 1'b1;
 		     	input_req[i] = 1'b1;
-		     	input_data[i][noc_flit_size-1:noc_flit_size-2] = preamble_tail;
-		     	input_data[i][noc_flit_size-3:0] = snd_count[i];
+		     	input_data[i][NOC_FLIT_SIZE-1:NOC_FLIT_SIZE-2] = preamble_tail;
+		     	input_data[i][NOC_FLIT_SIZE-3:0] = snd_count[i];
 		     end
 		  end
 		  else begin
@@ -247,8 +266,8 @@ module gen
 			incr_snd_count[i] = 1'b1;
 			incr_total_snd[i][dst_current[i]] = 1'b1;
 		     	input_req[i] = 1'b1;
-		     	input_data[i][noc_flit_size-1:noc_flit_size-2] = preamble_body;
-		     	input_data[i][noc_flit_size-3:0] = snd_count[i];
+		     	input_data[i][NOC_FLIT_SIZE-1:NOC_FLIT_SIZE-2] = preamble_body;
+		     	input_data[i][NOC_FLIT_SIZE-3:0] = snd_count[i];
 		     end
 		  end // else: !if(& snd_count[i][$clog2(PKT_SIZE)-1:0] == 1'b1)
 
@@ -289,7 +308,7 @@ module gen
 	 // always accept incoming packets for now.
 	 assign output_ack[i] = 1'b1;
 	 assign new_flit[i] = output_req[i] & output_ack[i];
-	 assign new_packet[i] = output_data[i][noc_flit_size-1] & new_flit[i];
+	 assign new_packet[i] = output_data[i][NOC_FLIT_SIZE-1] & new_flit[i];
 	 assign src_next[i] = output_data[i][29:27] * XLEN + output_data[i][24:22];
 
 	 always_ff @(posedge clk) begin
@@ -316,7 +335,7 @@ module gen
    endgenerate
    // Traffic Generator --> End
 
-   sync_wrap #(.XLEN(XLEN), .YLEN(YLEN), .TILES_NUM(TILES_NUM), .flit_size(noc_flit_size)) dut
+   sync_wrap #(.XLEN(XLEN), .YLEN(YLEN), .TILES_NUM(TILES_NUM), .flit_size(NOC_FLIT_SIZE)) dut
      (
       .clk(clk),
       .rstn(rstn),
