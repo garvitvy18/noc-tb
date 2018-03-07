@@ -5,3 +5,8 @@
 work
 *.vcd
 transcript
+*.zip
+*.jou
+*.log
+.Xil
+vivado
