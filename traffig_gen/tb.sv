@@ -3,13 +3,16 @@
 
 module tb ();
 
-   localparam CLK_PERIOD = 10;
+   localparam CLK_PERIOD = 5;
 
    logic clk;
    logic rstn;
    logic snd_complete;
    logic rcv_complete;
    logic test_error;
+   logic uart_rx;
+   logic uart_tx;
+   logic uart_err;
 
    initial begin
       clk = 1'b0;
@@ -47,8 +50,11 @@ module tb ();
    end
 
    gen traffic_gen (.clk(clk), .rstn(rstn),
-		    .snd_complete(snd_complete),
-		    .rcv_complete(rcv_complete),
-		    .test_error(test_error));
+		    .snd_complete_o(snd_complete),
+		    .rcv_complete_o(rcv_complete),
+		    .test_error(test_error),
+		    .uart_rx(uart_rx),
+		    .uart_tx(uart_tx),
+		    .uart_err(uart_err));
 
 endmodule

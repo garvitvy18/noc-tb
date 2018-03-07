@@ -4,10 +4,13 @@ module gen
    input logic 	clk,
    input logic 	rstn,
 
-   output logic snd_complete,
-   output logic rcv_complete,
-   output logic test_error
+   output logic snd_complete_o,
+   output logic rcv_complete_o,
+   output logic test_error,
 
+   input logic uart_rx,
+   output logic uart_tx,
+   output logic uart_err
    );
 
    // Injected flits per tile (power of 2 only)
@@ -129,6 +132,16 @@ module gen
 
 
    // Local registers and counters
+   logic 			     soft_reset;
+   logic [12:0] 		     wdog;
+   logic [3:0] 			     debug_state;
+   logic [3:0] 			     debug_next;
+   logic 			     csr_we;
+   logic [7:0] 			     csr_di;
+   logic [7:0] 			     csr_do;
+   logic 			     rx_irq;
+   logic 			     uart_busy;
+
    logic [63:0] psr_state[0:TILES_NUM-1];
    logic [63:0] psr_state_next[0:TILES_NUM-1];
    logic [63:0] psr_next[0:TILES_NUM-1];
@@ -145,7 +158,12 @@ module gen
    logic [0:TILES_NUM-1][0:TILES_NUM-1] match_sndrcv;    // Both packed
    logic [0:TILES_NUM-1][0:TILES_NUM-1] mismatch_sndrcv;    // Both packed
 
-   (* KEEP = "TRUE" *) logic [63:0] 			latency;
+   logic 				snd_complete;
+   logic 				snd_complete_reg;
+   logic 				rcv_complete;
+   logic 				rcv_complete_reg;
+
+   (* KEEP = "TRUE" *) logic [31:0] 			latency;
 
    logic				incr_snd_count[0:TILES_NUM-1];
    logic [0:TILES_NUM-1] 		incr_total_snd[0:TILES_NUM-1];
@@ -169,7 +187,7 @@ module gen
 
    // Enable traffic generation after reset
    always_ff @(posedge clk)
-     if (rstn == 1'b0)
+     if (rstn == 1'b0 || soft_reset == 1'b1)
        en <= 1'b0;
      else
        en <= 1'b1;
@@ -217,7 +235,7 @@ module gen
 	    incr_total_snd[i] = '0;
 	    sample_dst[i] = 1'b0;
 
-	    if (en == 1'b1 && snd_count[i] < MAX_SND_COUNT) begin
+	    if (en == 1'b1 && snd_count[i] < MAX_SND_COUNT && rcv_complete_reg == 1'b0) begin
 
 	       if (PKT_SIZE == 1) begin
 		  // Send single-flit packet
@@ -276,12 +294,12 @@ module gen
 
 	       end // else: !if(PKT_SIZE == 1)
 
-	    end // if (en == 1'b1 && snd_count[i] < MAX_SND_COUNT)
+	    end // if (en == 1'b1 && snd_complete_reg == 1'b0)
 
 	 end // always_comb
 
 	 always_ff @(posedge clk or negedge rstn) begin
-	    if (rstn == 1'b0) begin
+	    if (rstn == 1'b0 || soft_reset == 1'b1) begin
 	       snd_count[i] <= 0;
 	       dst_current[i] <= 0;
 	    end
@@ -297,12 +315,12 @@ module gen
 
 	 for (j = 0; j < TILES_NUM; j++) begin
 	    always_ff @(posedge clk or negedge rstn) begin
-	       if (rstn == 1'b0) begin
+	       if (rstn == 1'b0 || soft_reset == 1'b1) begin
 		  total_snd[i][j] <= 0;
 	       end
 	       else begin
 		  if (incr_total_snd[i][j] == 1'b1) begin
-		     total_snd[i][j] = total_snd[i][j] + 1;
+		     total_snd[i][j] <= total_snd[i][j] + 1;
 		  end
 	       end
 	    end
@@ -315,7 +333,7 @@ module gen
 	 assign src_next[i] = output_data[i][29:27] * XLEN + output_data[i][24:22];
 
 	 always_ff @(posedge clk) begin
-	    if (rstn == 1'b0) begin
+	    if (rstn == 1'b0 || soft_reset == 1'b1) begin
 	       src_current[i] <= '0;
 	       total_rcv[i] <= '0;
 	    end
@@ -357,13 +375,32 @@ module gen
    // Check
    assign snd_complete = & snd_done;
    assign rcv_complete = & match_sndrcv;
-   assign test_error = | mismatch_sndrcv;
+   assign test_error = (| mismatch_sndrcv) & wdog[12];
+
+   always_ff @(posedge clk) begin
+      if (rstn == 1'b0 || soft_reset == 1'b1) begin
+	 wdog <= 0;
+	 snd_complete_reg <= 1'b0;
+	 rcv_complete_reg <= 1'b0;
+      end
+      else begin
+	 if (snd_complete & wdog[12])
+	   wdog <= wdog + 1;
+	 if (snd_complete)
+	   snd_complete_reg <= 1'b1;
+	 if (rcv_complete)
+	   rcv_complete_reg <= 1'b1;
+      end
+   end // always_ff @
+
+   assign snd_complete_o = snd_complete_reg;
+   assign rcv_complete_o = rcv_complete_reg;
 
    generate
       for (i = 0; i < TILES_NUM; i++) begin
 
 	 always_ff @(posedge clk) begin
-	    if (rstn == 1'b0) begin
+	    if (rstn == 1'b0 || soft_reset == 1'b1) begin
 	       snd_done[i] <= 1'b0;
 	    end
 	    else begin
@@ -376,7 +413,7 @@ module gen
 	 for (j = 0; j < TILES_NUM; j++) begin
 
 	    always_ff @(posedge clk) begin
-	       if (rstn == 1'b0) begin
+	       if (rstn == 1'b0 || soft_reset == 1'b1) begin
 		  match_sndrcv[i][j] <= 1'b0;
 		  mismatch_sndrcv[i][j] <= 1'b0;
 	       end
@@ -400,7 +437,7 @@ module gen
 
    // Measure latency (try output this 
    always_ff @(posedge clk) begin
-      if (rstn == 1'b0) begin
+      if (rstn == 1'b0 || soft_reset == 1'b1) begin
 	 latency <= 0;
       end
       else begin
@@ -414,5 +451,193 @@ module gen
       if (rcv_complete == 1'b1)
 	$display("Total latency is %d", latency);
    end
+
+   // Send output through simple UART interface
+   function [7:0] hex2ascii (logic [3:0] hex);
+      logic [7:0] ascii;
+      case (hex)
+	4'b0000 : ascii = 48;
+	4'b0001 : ascii = 49;
+	4'b0010 : ascii = 50;
+	4'b0011 : ascii = 51;
+	4'b0100 : ascii = 52;
+	4'b0101 : ascii = 53;
+	4'b0110 : ascii = 54;
+	4'b0111 : ascii = 55;
+	4'b1000 : ascii = 56;
+	4'b1001 : ascii = 57;
+	4'b1010 : ascii = 65;
+	4'b1011 : ascii = 66;
+	4'b1100 : ascii = 67;
+	4'b1101 : ascii = 68;
+	4'b1110 : ascii = 69;
+	4'b1111 : ascii = 70;
+      endcase // case (hex)
+      return ascii;
+   endfunction
+
+   always_ff @(posedge clk) begin
+      if (rstn == 1'b0)
+	debug_state <= 0;
+      else
+	debug_state <= debug_next;
+   end
+
+   always_comb  begin
+      soft_reset = 1'b0;
+      csr_we = 1'b0;
+      csr_di = 0;
+      debug_next = debug_state;
+
+      case (debug_state)
+	4'h0 :
+	  begin
+	     if (test_error == 1'b1) begin // ERR (E)
+		csr_we = 1'b1;
+		csr_di = 8'd69;
+		debug_next = 4'h1;
+	     end
+	     else if (rcv_complete == 1'b1) begin // 0
+		csr_we = 1'b1;
+		csr_di = 8'd48;
+		debug_next = 4'h6;
+	     end
+	  end
+	4'h6 : // x
+	  begin
+	     if (~uart_busy) begin
+		csr_we = 1'b1;
+		csr_di = 8'd120;
+		debug_next = 4'h7;
+	     end
+	  end
+	4'h7 : // latency[31:28]
+	  begin
+	     if (~uart_busy) begin
+		csr_we = 1'b1;
+		csr_di = hex2ascii(latency[31:28]);
+		debug_next = 4'h8;
+	     end
+	  end
+	4'h8 : // latency[27:24]
+	  begin
+	     if (~uart_busy) begin
+		csr_we = 1'b1;
+		csr_di = hex2ascii(latency[27:24]);
+		debug_next = 4'h9;
+	     end
+	  end
+	4'h9 : // latency[23:20]
+	  begin
+	     if (~uart_busy) begin
+		csr_we = 1'b1;
+		csr_di = hex2ascii(latency[23:20]);
+		debug_next = 4'hA;
+	     end
+	  end
+	4'hA : // latency[19:16]
+	  begin
+	     if (~uart_busy) begin
+		csr_we = 1'b1;
+		csr_di = hex2ascii(latency[19:16]);
+		debug_next = 4'hB;
+	     end
+	  end
+	4'hB : // latency[15:12]
+	  begin
+	     if (~uart_busy) begin
+		csr_we = 1'b1;
+		csr_di = hex2ascii(latency[15:12]);
+		debug_next = 4'hC;
+	     end
+	  end
+	4'hC : // latency[11:8]
+	  begin
+	     if (~uart_busy) begin
+		csr_we = 1'b1;
+		csr_di = hex2ascii(latency[11:8]);
+		debug_next = 4'hD;
+	     end
+	  end
+	4'hD : // latency[7:4]
+	  begin
+	     if (~uart_busy) begin
+		csr_we = 1'b1;
+		csr_di = hex2ascii(latency[7:4]);
+		debug_next = 4'hE;
+	     end
+	  end
+	4'hE : // latency[3:0]
+	  begin
+	     if (~uart_busy) begin
+		csr_we = 1'b1;
+		csr_di = hex2ascii(latency[3:0]);
+		debug_next = 4'h3;
+	     end
+	  end
+	4'h1 : // ERR (R)
+	  begin
+	     if (~uart_busy) begin
+		csr_we = 1'b1;
+		csr_di = 8'd82;
+		debug_next = 4'h2;
+	     end
+	  end
+	4'h2 : // ERR (R)
+	  begin
+	     if (~uart_busy) begin
+		csr_we = 1'b1;
+		csr_di = 8'd82;
+		debug_next = 4'h3;
+	     end
+	  end
+	4'h3 : // Carriage Return
+	  begin
+	     if (~uart_busy) begin
+		csr_we = 1'b1;
+		csr_di = 8'd13;
+		debug_next = 4'h4;
+	     end
+	  end
+	4'h4 : // New Line
+	  begin
+	     if (~uart_busy) begin
+		csr_di = 8'd10;
+		csr_we = 1'b1;
+		debug_next = 4'h5;
+	     end
+	  end
+	4'h5 : // Wait for Soft reset (any char)
+	  begin
+	     if (rx_irq) begin
+		soft_reset = 1'b1;
+		debug_next = 4'hf;
+	     end
+	  end
+	4'hF : // Wait for Soft reset (any char)
+	  begin
+	     soft_reset = 1'b1;
+	     if (snd_complete_reg | snd_complete == 1'b0) begin
+		debug_next = 4'h0;
+	     end
+	  end
+      endcase
+   end // always_comb
+
+   uart debug_uart
+     (
+      .clk(clk),
+      .rst(~rstn),
+      .rx(uart_rx),
+      .tx(uart_tx),
+      .transmit(csr_we),
+      .tx_byte(csr_di),
+      .received(rx_irq),
+      .rx_byte(csr_do),
+      .is_receiving(),
+      .is_transmitting(uart_busy),
+      .recv_error(uart_err)
+      );
+
 
 endmodule // gen
