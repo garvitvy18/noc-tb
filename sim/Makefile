@@ -1,7 +1,7 @@
 
 VCOM = vcom -quiet -93
 VLOG = vlog -quiet
-SVLOG = vlog -sv -quiet
+SVLOG = vlog -sv -quiet -suppress 2583
 
 # SIM_GUI = 1
 
@@ -21,9 +21,9 @@ sim-compile-sync: work
 
 sim: sim-compile-sync
 ifdef SIM_GUI
-	vsim tb -novopt
+	vsim tb -voptargs="+acc"
 else
-	vsim tb -c -novopt
+	vsim tb -c -voptargs="+acc"
 endif
 
 clean:
