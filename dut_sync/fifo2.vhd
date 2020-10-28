@@ -1,3 +1,6 @@
+-- Copyright (c) 2011-2019 Columbia University, System Level Design Group
+-- SPDX-License-Identifier: Apache-2.0
+
 --/*
 -- * Module: fifo2
 -- * Description: First In First Out queue.  
@@ -28,7 +31,6 @@ entity fifo2 is
 		--request registers
 		empty		: out std_logic;
 		full		: out std_logic;
-                almost_full     : out std_logic;
                 atleast_4slots  : out std_logic;
                 exactly_3slots  : out std_logic;
 		data_out 	: out std_logic_vector(width-1 downto 0));

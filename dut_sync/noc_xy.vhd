@@ -6,7 +6,7 @@
 -- Author:      Paolo Mantovani
 -- Affiliation: Columbia University
 --
--- last update: 2018-02-22
+-- last update: 2020-10-28
 --
 -------------------------------------------------------------------------------
 --
@@ -138,13 +138,12 @@ architecture mesh of noc_xy is
       flow_control : integer;
       width        : integer;
       depth        : integer;
-      ports        : std_logic_vector(4 downto 0);
-      localx       : std_logic_vector(2 downto 0);
-      localy       : std_logic_vector(2 downto 0));
-
+      ports        : std_logic_vector(4 downto 0));
     port (
       clk           : in  std_logic;
       rst           : in  std_logic;
+      CONST_localx  : in  std_logic_vector(2 downto 0);
+      CONST_localy  : in  std_logic_vector(2 downto 0);
       data_n_in     : in  std_logic_vector(width-1 downto 0);
       data_s_in     : in  std_logic_vector(width-1 downto 0);
       data_w_in     : in  std_logic_vector(width-1 downto 0);
@@ -257,12 +256,12 @@ begin  -- mesh
           flow_control => FLOW_CONTROL,
           width        => flit_size,
           depth        => ROUTER_DEPTH,
-          ports        => ROUTER_PORTS(k),
-          localx        => localx(k),
-          localy        => localy(k))
+          ports        => ROUTER_PORTS(k))
       port map (
           clk           => clk,
           rst           => rst,
+          CONST_localx  => localx(k),
+          CONST_localy  => localy(k),
           data_n_in     => data_n_in(k),
           data_s_in     => data_s_in(k),
           data_w_in     => data_w_in(k),

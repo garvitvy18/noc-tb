@@ -1,5 +1,8 @@
+-- Copyright (c) 2011-2019 Columbia University, System Level Design Group
+-- SPDX-License-Identifier: Apache-2.0
+
 --/*
--- * Module: fifo
+-- * Module: fifo0
 -- * Description: First In First Out queue.  
 -- *              The DEPTH parameter represents the number of memory locations 
 -- *              into the FIFO. The WIDTH parameter represents data parallelism.
@@ -13,7 +16,7 @@ use IEEE.STD_LOGIC_1164.all;
 use ieee.std_logic_unsigned.all;
 use ieee.std_logic_arith.all;
 
-entity fifo is
+entity fifo0 is
 	generic(
 		depth : integer := 5;
 		width : integer := 18);
@@ -30,11 +33,11 @@ entity fifo is
 		full		: out std_logic;	
 		data_out 	: out std_logic_vector(width-1 downto 0));
 
-end fifo;
+end fifo0;
 
 
 
-architecture behavior of fifo is
+architecture behavior of fifo0 is
 
 	type reg_type is array(0 to depth-1) of std_logic_vector(width-1 downto 0);
 	signal reg, data_out_and : reg_type;

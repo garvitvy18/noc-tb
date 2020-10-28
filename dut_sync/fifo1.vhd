@@ -1,5 +1,8 @@
+-- Copyright (c) 2011-2019 Columbia University, System Level Design Group
+-- SPDX-License-Identifier: Apache-2.0
+
 --/*
--- * Module: fifo
+-- * Module: fifo1
 -- * Description: First In First Out queue.  
 -- *              The DEPTH parameter represents the number of memory locations 
 -- *              into the FIFO. The WIDTH parameter represents data parallelism.

@@ -1,3 +1,6 @@
+-- Copyright (c) 2011-2019 Columbia University, System Level Design Group
+-- SPDX-License-Identifier: Apache-2.0
+
 --/*
 -- * Module: bypassable_queue
 -- * Description: Bypassable FIFO.  
@@ -16,9 +19,10 @@ use ieee.std_logic_arith.all;
 entity bypassable_queue is
 	generic(
 		depth : integer;
-		width : integer;
-		localx	: std_logic_vector(2 downto 0);
-		localy	: std_logic_vector(2 downto 0));
+		width : integer
+--		localx	: std_logic_vector(2 downto 0);
+--		localy	: std_logic_vector(2 downto 0)
+        );
 
 	port(
 		clk		: in std_logic := '0';
@@ -39,7 +43,7 @@ end bypassable_queue;
 
 architecture behavior of bypassable_queue is
 
-component fifo
+component fifo0
 	generic(
 		depth : integer;
 		width : integer);
@@ -107,7 +111,7 @@ queue: fifo1
 end generate;
 
 QUEUE_INST: if (depth > 1) generate
-queue: fifo 
+queue: fifo0
 	generic map(
 		depth => depth,
 		width => width)
