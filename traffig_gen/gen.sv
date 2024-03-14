@@ -26,7 +26,7 @@ module gen
    const logic [1:0] preamble_tail = 2'b01;
    const logic [1:0] preamble_1flit = 2'b10;
 
-   localparam YX_WIDTH = 5;
+   localparam YX_WIDTH = 3;
    typedef logic [2:0] local_yx;
 
    localparam MSG_TYPE_WIDTH = 3;
@@ -35,7 +35,7 @@ module gen
    localparam RESERVED_WIDTH = 3;
    typedef logic [RESERVED_WIDTH-1:0] reserved_field_type;
 
-   localparam NOC_FLIT_SIZE = 34;
+   localparam NOC_FLIT_SIZE = 66;
    typedef logic [NOC_FLIT_SIZE-1:0] noc_flit_type;
 
    localparam NEXT_ROUTING_WIDTH = 5;
@@ -102,10 +102,10 @@ module gen
 
       header = 0;
       header[NOC_FLIT_SIZE - 1 : NOC_FLIT_SIZE - PREAMBLE_WIDTH] = preamble_header;
-      header[NOC_FLIT_SIZE - PREAMBLE_WIDTH - 1 : NOC_FLIT_SIZE - PREAMBLE_WIDTH - YX_WIDTH] = {2'b00, local_y};
-      header[NOC_FLIT_SIZE - PREAMBLE_WIDTH - YX_WIDTH - 1 : NOC_FLIT_SIZE - PREAMBLE_WIDTH - 2*YX_WIDTH] = {2'b00, local_x};
-      header[NOC_FLIT_SIZE - PREAMBLE_WIDTH - 2*YX_WIDTH - 1 : NOC_FLIT_SIZE - PREAMBLE_WIDTH - 3*YX_WIDTH] = {2'b00, remote_y};
-      header[NOC_FLIT_SIZE - PREAMBLE_WIDTH - 3*YX_WIDTH - 1 : NOC_FLIT_SIZE - PREAMBLE_WIDTH - 4*YX_WIDTH] = {2'b00, remote_x};
+      header[NOC_FLIT_SIZE - PREAMBLE_WIDTH - 1 : NOC_FLIT_SIZE - PREAMBLE_WIDTH - YX_WIDTH] =  local_y;
+      header[NOC_FLIT_SIZE - PREAMBLE_WIDTH - YX_WIDTH - 1 : NOC_FLIT_SIZE - PREAMBLE_WIDTH - 2*YX_WIDTH] = local_x;
+      header[NOC_FLIT_SIZE - PREAMBLE_WIDTH - 2*YX_WIDTH - 1 : NOC_FLIT_SIZE - PREAMBLE_WIDTH - 3*YX_WIDTH] = remote_y;
+      header[NOC_FLIT_SIZE - PREAMBLE_WIDTH - 3*YX_WIDTH - 1 : NOC_FLIT_SIZE - PREAMBLE_WIDTH - 4*YX_WIDTH] = remote_x;
       header[NOC_FLIT_SIZE - PREAMBLE_WIDTH - 4*YX_WIDTH - 1 : NOC_FLIT_SIZE - PREAMBLE_WIDTH - 4*YX_WIDTH - MSG_TYPE_WIDTH] = msg_type;
       header[NOC_FLIT_SIZE - PREAMBLE_WIDTH - 4*YX_WIDTH - MSG_TYPE_WIDTH - 1 : NOC_FLIT_SIZE - PREAMBLE_WIDTH - 4*YX_WIDTH - MSG_TYPE_WIDTH - RESERVED_WIDTH] = reserved;
 
@@ -330,7 +330,8 @@ module gen
 	 assign output_ack[i] = 1'b1;
 	 assign new_flit[i] = output_req[i] & output_ack[i];
 	 assign new_packet[i] = output_data[i][NOC_FLIT_SIZE-1] & new_flit[i];
-	 assign src_next[i] = output_data[i][29:27] * XLEN + output_data[i][24:22];
+	 assign src_next[i] = output_data[i][NOC_FLIT_SIZE - PREAMBLE_WIDTH - 1:NOC_FLIT_SIZE - PREAMBLE_WIDTH - YX_WIDTH] * XLEN
+                          + output_data[i][NOC_FLIT_SIZE - PREAMBLE_WIDTH - YX_WIDTH - 1:NOC_FLIT_SIZE - PREAMBLE_WIDTH - 2*YX_WIDTH];
 
 	 always_ff @(posedge clk) begin
 	    if (rstn == 1'b0 || soft_reset == 1'b1) begin

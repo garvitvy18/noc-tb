@@ -60,7 +60,7 @@ package nocpackage is
                                             4*YX_WIDTH+
                                             MSG_TYPE_WIDTH+
                                             RESERVED_WIDTH+
-                                            NEXT_ROUTING_WIDTH;
+                                            NEXT_ROUTING_WIDTH + 32;
 
   subtype local_yx is std_logic_vector(2 downto 0);
   subtype noc_preamble_type is std_logic_vector(PREAMBLE_WIDTH-1 downto 0);

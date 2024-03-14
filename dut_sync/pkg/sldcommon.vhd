@@ -27,4 +27,18 @@ package sldcommon is
     queue_full => (others => '0')
     );
 
+  function to_std_logic (i : integer) return std_logic;
 end sldcommon;
+
+package body sldcommon is
+  function to_std_logic (
+    i : integer)
+    return std_logic is
+  begin  -- to_std_logic
+    if i = 0 then
+      return '0';
+    else
+     return '1';
+   end if;
+  end to_std_logic;
+end;

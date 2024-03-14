@@ -17,6 +17,9 @@ sim-compile-sync: work
 	$(VLOG) ../uart/*.v
 	$(SVLOG) ../traffig_gen/gen.sv
 	$(SVLOG) ../traffig_gen/tb.sv
+	$(SVLOG) ../dut_sync/router/noc_pkg.sv
+	$(SVLOG) ../dut_sync/router/r*.sv
+	$(SVLOG) ../dut_sync/router/l*.sv
 
 
 sim: sim-compile-sync
