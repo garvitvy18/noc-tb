@@ -35,7 +35,7 @@ entity noc_xy is
   generic (
     XLEN      : integer := 4;
     YLEN      : integer := 0;
-    TILES_NUM : integer := 2;
+    TILES_NUM : integer := 4;
     flit_size : integer := 34);
 
   port (
