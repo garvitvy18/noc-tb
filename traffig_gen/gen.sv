@@ -41,57 +41,57 @@ module gen
    localparam NEXT_ROUTING_WIDTH = 5;
 
    // NoC Size --> Begin
-   localparam XLEN = 2;
-   localparam YLEN = 2;
-   localparam TILES_NUM = XLEN * YLEN;
+   localparam XLEN = 4;
+   localparam YLEN = 0;
+   localparam TILES_NUM = XLEN;
 
    const local_yx tile_x[0:TILES_NUM - 1]
      = {
 	3'b000,
 	3'b001,
-	// 3'b010,
-	// 3'b011,
-	3'b000,
-	3'b001// ,
-	// 3'b010,
-	// 3'b011,
-	// 3'b000,
-	// 3'b001,
-	// 3'b010,
-	// 3'b011,
-	// 3'b000,
-	// 3'b001,
-	// 3'b010,
-	// 3'b011
+        3'b010,
+	 3'b011 //,
+//	3'b000,
+//	3'b001 ,
+//	 3'b010,
+//	 3'b011,
+//	 3'b000,
+//	 3'b001,
+//	 3'b010,
+//	 3'b011,
+//	 3'b000,
+//	 3'b001,
+//	 3'b010,
+//	 3'b011
 	};
-
-   const local_yx tile_y[0:TILES_NUM - 1]
+   const local_yx tile_y[0:TILES_NUM - 1] = { 3'b000, 3'b000, 3'b000, 3'b000 };
+   /*const local_yx tile_y[0:TILES_NUM - 1]
      = {
 	3'b000,
 	3'b000,
-	// 3'b000,
-	// 3'b000,
+	 3'b000,
+	 3'b000,
 	3'b001,
-	3'b001// ,
-	// 3'b001,
-	// 3'b001,
-	// 3'b010,
-	// 3'b010,
-	// 3'b010,
-	// 3'b010,
-	// 3'b011,
-	// 3'b011,
-	// 3'b011,
-	// 3'b011
-	};
+	3'b001 ,
+	 3'b001,
+	 3'b001,
+	 3'b010,
+	 3'b010,
+	 3'b010,
+	 3'b010,
+	 3'b011,
+	 3'b011,
+	 3'b011,
+	 3'b011
+	}; */
    // NoC Size --> End
 
    // Helper function
    function noc_flit_type create_header
      (
-      local_yx local_y,
+//      local_yx local_y,
       local_yx local_x,
-      local_yx remote_y,
+//      local_yx remote_y,
       local_yx remote_x,
       noc_msg_type msg_type,
       reserved_field_type reserved
@@ -99,33 +99,42 @@ module gen
 
       noc_flit_type header;
       logic [NEXT_ROUTING_WIDTH-1:0] go_left, go_right, go_up, go_down;
-
+ logic [YX_WIDTH-1:0] dist_cw, dist_ccw;
       header = 0;
       header[NOC_FLIT_SIZE - 1 : NOC_FLIT_SIZE - PREAMBLE_WIDTH] = preamble_header;
-      header[NOC_FLIT_SIZE - PREAMBLE_WIDTH - 1 : NOC_FLIT_SIZE - PREAMBLE_WIDTH - YX_WIDTH] =  local_y;
+//      header[NOC_FLIT_SIZE - PREAMBLE_WIDTH - 1 : NOC_FLIT_SIZE - PREAMBLE_WIDTH - YX_WIDTH] =  local_y;
       header[NOC_FLIT_SIZE - PREAMBLE_WIDTH - YX_WIDTH - 1 : NOC_FLIT_SIZE - PREAMBLE_WIDTH - 2*YX_WIDTH] = local_x;
-      header[NOC_FLIT_SIZE - PREAMBLE_WIDTH - 2*YX_WIDTH - 1 : NOC_FLIT_SIZE - PREAMBLE_WIDTH - 3*YX_WIDTH] = remote_y;
+//      header[NOC_FLIT_SIZE - PREAMBLE_WIDTH - 2*YX_WIDTH - 1 : NOC_FLIT_SIZE - PREAMBLE_WIDTH - 3*YX_WIDTH] = remote_y;
       header[NOC_FLIT_SIZE - PREAMBLE_WIDTH - 3*YX_WIDTH - 1 : NOC_FLIT_SIZE - PREAMBLE_WIDTH - 4*YX_WIDTH] = remote_x;
       header[NOC_FLIT_SIZE - PREAMBLE_WIDTH - 4*YX_WIDTH - 1 : NOC_FLIT_SIZE - PREAMBLE_WIDTH - 4*YX_WIDTH - MSG_TYPE_WIDTH] = msg_type;
       header[NOC_FLIT_SIZE - PREAMBLE_WIDTH - 4*YX_WIDTH - MSG_TYPE_WIDTH - 1 : NOC_FLIT_SIZE - PREAMBLE_WIDTH - 4*YX_WIDTH - MSG_TYPE_WIDTH - RESERVED_WIDTH] = reserved;
 
-      if (local_x < remote_x)
-	go_right = 'b01000;
-      else
-	go_right = 'b10111;
+    // Determine direction based on local_x and remote_x
+    if (local_x < remote_x || (local_x == XLEN-1 && remote_x == 0))
+        go_right = 3'b010; // Move East (1)
+    else
+        go_right = 3'b111; // No move in this direction
 
-      if (local_x > remote_x)
-	go_left = 'b00100;
-      else
-	go_left = 'b11011;
+    if (local_x > remote_x || (local_x == 0 && remote_x == XLEN-1))
+        go_left = 3'b001;  // Move West (0)
+    else
+        go_left = 3'b111;  // No move in this direction
 
-      if (local_y < remote_y)
-	header[NEXT_ROUTING_WIDTH - 1 : 0] = 'b01110 & go_left & go_right;
-      else
-	header[NEXT_ROUTING_WIDTH - 1 : 0] = 'b01101 & go_left & go_right;
+    // Compute shortest path in a Ring (Clockwise vs Counterclockwise)
+   // logic [YX_WIDTH-1:0] dist_cw, dist_ccw;
 
-      if ((local_y == remote_y) && (local_x == remote_x))
-	header[NEXT_ROUTING_WIDTH - 1 : 0] = 'b1000;
+    dist_cw  = (remote_x >= local_x) ? (remote_x - local_x) : (XLEN + remote_x - local_x);
+    dist_ccw = (local_x >= remote_x) ? (local_x - remote_x) : (local_x + XLEN - remote_x);
+
+    // Select routing direction (Ring-based decision with wrap-around)
+    if (local_x == remote_x) begin
+        header[2:0] = 3'b100; // Local (2)
+    end else if (dist_cw <= dist_ccw) begin
+        header[2:0] = 3'b010 & go_right; // Move East (1) or Wrap-around to 0
+    end else begin
+        header[2:0] = 3'b001 & go_left;  // Move West (0) or Wrap-around to last tile
+    end
+
 
       return header;
    endfunction
@@ -244,9 +253,9 @@ module gen
 		     incr_total_snd[i][dst_next[i]] = 1'b1;
 		     sample_dst[i] = 1'b1;
 		     input_req[i] = 1'b1;
-		     input_data[i] = create_header(tile_y[i],
+		     input_data[i] = create_header(//tile_y[i],
 						   tile_x[i],
-						   tile_y[dst_next[i]],
+						   //tile_y[dst_next[i]],
 						   tile_x[dst_next[i]],
 						   3'b111,
 						   snd_count[i][RESERVED_WIDTH-1:0]);
@@ -262,9 +271,9 @@ module gen
 			incr_total_snd[i][dst_next[i]] = 1'b1;
 			sample_dst[i] = 1'b1;
 			input_req[i] = 1'b1;
-			input_data[i] = create_header(tile_y[i],
+			input_data[i] = create_header(//tile_y[i],
 						      tile_x[i],
-						      tile_y[dst_next[i]],
+						      //tile_y[dst_next[i]],
 						      tile_x[dst_next[i]],
 						      3'b111,
 						      snd_count[i][RESERVED_WIDTH-1:0]);

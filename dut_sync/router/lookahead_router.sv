@@ -54,29 +54,25 @@ module lookahead_router #(
     parameter noc::noc_flow_control_t FlowControl = noc::kFlowControlAckNack,
     parameter int unsigned DataWidth = 32,
     parameter int unsigned PortWidth = DataWidth + $bits(noc::preamble_t),
-    parameter bit [4:0] Ports = noc::AllPorts,
+    parameter bit [2:0] Ports = noc::AllPorts,  // Only East, West, and Local ports enabled
     parameter integer QUEUE_SIZE = 4
 ) (
     input  logic clk,
     input  logic rst,
     // Coordinates
     input  noc::xy_t position,
-    // Input ports
-    input  logic [PortWidth-1:0] data_n_in,
-    input  logic [PortWidth-1:0] data_s_in,
-    input  logic [PortWidth-1:0] data_w_in,
+    // Input ports (East, West, Local)
     input  logic [PortWidth-1:0] data_e_in,
+    input  logic [PortWidth-1:0] data_w_in,
     input  logic [PortWidth-1:0] data_p_in,
-    input  logic [4:0] data_void_in,
-    output logic [4:0] stop_out,
-    // Output ports
-    output logic [PortWidth-1:0] data_n_out,
-    output logic [PortWidth-1:0] data_s_out,
-    output logic [PortWidth-1:0] data_w_out,
+    input  logic [2:0] data_void_in,
+    output logic [2:0] stop_out,
+    // Output ports (East, West, Local)
     output logic [PortWidth-1:0] data_e_out,
+    output logic [PortWidth-1:0] data_w_out,
     output logic [PortWidth-1:0] data_p_out,
-    output logic [4:0] data_void_out,
-    input  logic [4:0] stop_in
+    output logic [2:0] data_void_out,
+    input  logic [2:0] stop_in
 );
 
     localparam bit FifoBypassEnable = FlowControl == noc::kFlowControlAckNack;
@@ -90,7 +86,7 @@ module lookahead_router #(
     );
 
     parameter int unsigned CreditsWidth = $clog2(QUEUE_SIZE + 1);
-    typedef logic [4:0][CreditsWidth-1:0] credits_t;
+    typedef logic [2:0][CreditsWidth-1:0] credits_t;  // Now tracking credits for East, West, and Local
 
     typedef struct packed {
         noc::xy_t source;
@@ -117,64 +113,55 @@ module lookahead_router #(
         kPayloadFlits = 1'b1
     } state_t;
 
-    state_t [4:0] state;
-    state_t [4:0] new_state;
+    state_t [2:0] state;
+    state_t [2:0] new_state;
 
-    flit_t [4:0] data_in;
-    flit_t [4:0] fifo_head;
-    flit_t [4:0] data_out_crossbar;
-    flit_t [4:0] last_flit;
+    flit_t [2:0] data_in;
+    flit_t [2:0] fifo_head;
+    flit_t [2:0] data_out_crossbar;
+    flit_t [2:0] last_flit;
 
-    logic [4:0][4:0] saved_routing_request;
-    logic [4:0][4:0] final_routing_request;  // ri lint_check_waive NOT_READ
-    logic [4:0][4:0] next_hop_routing;
+    logic [2:0][2:0] saved_routing_request;
+    logic [2:0][2:0] final_routing_request;  // ri lint_check_waive NOT_READ
+    logic [2:0][2:0] next_hop_routing;
 
-    logic [4:0][3:0] transp_final_routing_request;
+    logic [2:0][3:0] transp_final_routing_request;
 
-    logic [4:0][4:0] enhanc_routing_configuration;
+    logic [2:0][2:0] enhanc_routing_configuration;
 
-    logic [4:0][3:0] routing_configuration;
-    logic [4:0][3:0] saved_routing_configuration;
-    logic [4:0][3:0] grant;
-    logic [4:0] grant_valid;
+    logic [2:0][3:0] routing_configuration;
+    logic [2:0][3:0] saved_routing_configuration;
+    logic [2:0][3:0] grant;
+    logic [2:0] grant_valid;
 
-    logic [4:0][4:0] rd_fifo;
-    logic [4:0] no_backpressure;
-    logic [4:0] rd_fifo_or;
+    logic [2:0][2:0] rd_fifo;
+    logic [2:0] no_backpressure;
+    logic [2:0] rd_fifo_or;
 
-    logic [4:0] in_unvalid_flit;
-    logic [4:0] out_unvalid_flit;
-    logic [4:0] in_valid_head;
+    logic [2:0] in_unvalid_flit;
+    logic [2:0] out_unvalid_flit;
+    logic [2:0] in_valid_head;
 
-    logic [4:0] full;
-    logic [4:0] empty;
-    logic [4:0] wr_fifo;
+    logic [2:0] full;
+    logic [2:0] empty;
+    logic [2:0] wr_fifo;
 
     credits_t credits;
 
-    logic [4:0] forwarding_tail;
-    logic [4:0] forwarding_head;
-    logic [4:0] forwarding_in_progress;
-    logic [4:0] insert_lookahead_routing;
+    logic [2:0] forwarding_tail;
+    logic [2:0] forwarding_head;
+    logic [2:0] forwarding_in_progress;
+    logic [2:0] insert_lookahead_routing;
 
-    assign data_in[noc::kNorthPort] = data_n_in;
-    assign data_in[noc::kSouthPort] = data_s_in;
-    assign data_in[noc::kWestPort] = data_w_in;
     assign data_in[noc::kEastPort] = data_e_in;
+    assign data_in[noc::kWestPort] = data_w_in;
     assign data_in[noc::kLocalPort] = data_p_in;
 
     // This router has a single cycle delay.
-    // When using ready-valid protocol, the register is placed at the output; for credit-based,
-    // the register is the input FIFO (not bypassable) and the output of the crossbar is not
-    // registered.
-    assign data_n_out = FifoBypassEnable ? last_flit[noc::kNorthPort] :
-                      data_out_crossbar[noc::kNorthPort];
-    assign data_s_out = FifoBypassEnable ? last_flit[noc::kSouthPort] :
-                      data_out_crossbar[noc::kSouthPort];
-    assign data_w_out = FifoBypassEnable ? last_flit[noc::kWestPort]  :
-                      data_out_crossbar[noc::kWestPort];
-    assign data_e_out = FifoBypassEnable ? last_flit[noc::kEastPort]  :
+    assign data_e_out = FifoBypassEnable ? last_flit[noc::kEastPort] :
                       data_out_crossbar[noc::kEastPort];
+    assign data_w_out = FifoBypassEnable ? last_flit[noc::kWestPort] :
+                      data_out_crossbar[noc::kWestPort];
     assign data_p_out = FifoBypassEnable ? last_flit[noc::kLocalPort] :
                       data_out_crossbar[noc::kLocalPort];
 
@@ -183,16 +170,13 @@ module lookahead_router #(
     //////////////////////////////////////////////////////////////////////////////
     // Input FIFOs and look-ahead routing
     //////////////////////////////////////////////////////////////////////////////
-    for (g_i = 0; g_i < 5; g_i++) begin : gen_input_fifo
+    for (g_i = 0; g_i < 3; g_i++) begin : gen_input_fifo
         if (Ports[g_i]) begin : gen_input_port_enabled
 
             // Read FIFO if any of the output ports requests data.
-            // The FIFO won't update read pointer if empty
-            assign rd_fifo_or[g_i] = rd_fifo[0][g_i] | rd_fifo[1][g_i] | rd_fifo[2][g_i] |
-                               rd_fifo[3][g_i] | rd_fifo[4][g_i];
+            assign rd_fifo_or[g_i] = rd_fifo[0][g_i] | rd_fifo[1][g_i] | rd_fifo[2][g_i];
 
             // Write FIFO if data is valid.
-            // The FIFO won't accept the write if full.
             assign wr_fifo[g_i] = ~data_void_in[g_i];
 
             // Input FIFO
@@ -219,10 +203,8 @@ module lookahead_router #(
                     saved_routing_request[g_i] <= '0;
                 end else begin
                     if (fifo_head[g_i].header.preamble.tail) begin
-                        // Clear saved_routing_request if tail is next
                         saved_routing_request[g_i] <= '0;
                     end else if (in_valid_head[g_i]) begin
-                        // Sample saved_routing_request if valid head flit
                         saved_routing_request[g_i] <= fifo_head[g_i].header.routing;
                     end
                 end
@@ -231,8 +213,6 @@ module lookahead_router #(
             assign final_routing_request[g_i] = in_valid_head[g_i] ? fifo_head[g_i].header.routing :
                                             saved_routing_request[g_i];
 
-            // AckNack: stop data at input port if FIFO is full
-            // CreditBased: send credits when reading from the input FIFO
             assign stop_out[g_i] =  FifoBypassEnable ? full[g_i] :
                                 ~(rd_fifo_or[g_i] & ~in_unvalid_flit[g_i]);
 
@@ -262,17 +242,12 @@ module lookahead_router #(
 
     end  // for gen_input_fifo
 
-
-    //////////////////////////////////////////////////////////////////////////////
-    // Output crossbar and arbitration
-    //////////////////////////////////////////////////////////////////////////////
-    for (g_i = 0; g_i < 5; g_i++) begin : gen_output_control
+    // Output crossbar and arbitration (for 3 ports only: East, West, Local)
+    for (g_i = 0; g_i < 3; g_i++) begin : gen_output_control
         if (Ports[g_i]) begin : gen_output_port_enabled
 
             genvar g_j;
-            for (g_j = 0; g_j < 5; g_j++) begin : gen_transpose_routing
-                // transpose current routing request for easier accesss, but
-                // allow routing only to output port different from input port
+            for (g_j = 0; g_j < 3; g_j++) begin : gen_transpose_routing
                 if (g_j < g_i) begin : gen_transpose_routin_j_lt_i
                     assign transp_final_routing_request[g_i][g_j] = final_routing_request[g_j][g_i];
                     assign enhanc_routing_configuration[g_i][g_j] = routing_configuration[g_i][g_j];
@@ -282,7 +257,7 @@ module lookahead_router #(
                 end else begin : gen_transpose_routin_j_eq_i
                     assign enhanc_routing_configuration[g_i][g_j] = 1'b0;
                 end
-            end  // for gen_transpose_routing
+            end
 
             // Arbitration
             router_arbiter arbiter_i (
@@ -295,48 +270,35 @@ module lookahead_router #(
                 .grant_valid(grant_valid[g_i])
             );
 
-            // Sample current routing configuration
             always_ff @(posedge clk) begin
                 if (forwarding_in_progress[g_i]) begin
                     saved_routing_configuration[g_i] <= routing_configuration[g_i];
                 end
             end
 
-            // Set to overwrite routing info only on the head flit
             always_ff @(posedge clk) begin
                 if (rst) begin
-                    // First flit must be head
                     insert_lookahead_routing[g_i] <= 1'b1;
                 end else begin
                     if (forwarding_tail[g_i]) begin
-                        // Next flit will be head (convers single-flit packet)
                         insert_lookahead_routing[g_i] <= 1'b1;
                     end else if (forwarding_head[g_i]) begin
-                        // Next flit will not be head
                         insert_lookahead_routing[g_i] <= 1'b0;
                     end
                 end
             end
 
-            // Crossbar
             always_comb begin
                 data_out_crossbar[g_i] = '0;
                 rd_fifo[g_i]           = '0;
                 out_unvalid_flit[g_i]  = 1'b1;
 
                 unique case (enhanc_routing_configuration[g_i])
-                    noc::goNorth: begin
-                        data_out_crossbar[g_i] = ~insert_lookahead_routing[g_i] ? fifo_head[noc::kNorthPort] :
-            {fifo_head[noc::kNorthPort].flit[PortWidth-1:5], next_hop_routing[noc::kNorthPort]};
-                        rd_fifo[g_i][noc::kNorthPort] = no_backpressure[g_i];
-                        out_unvalid_flit[g_i] = in_unvalid_flit[noc::kNorthPort];
-                    end
-
-                    noc::goSouth: begin
-                        data_out_crossbar[g_i] = ~insert_lookahead_routing[g_i] ? fifo_head[noc::kSouthPort] :
-              {fifo_head[noc::kSouthPort].flit[PortWidth-1:5], next_hop_routing[noc::kSouthPort]};
-                        rd_fifo[g_i][noc::kSouthPort] = no_backpressure[g_i];
-                        out_unvalid_flit[g_i] = in_unvalid_flit[noc::kSouthPort];
+                    noc::goEast: begin
+                        data_out_crossbar[g_i] = ~insert_lookahead_routing[g_i] ? fifo_head[noc::kEastPort] :
+              {fifo_head[noc::kEastPort].flit[PortWidth-1:5], next_hop_routing[noc::kEastPort]};
+                        rd_fifo[g_i][noc::kEastPort] = no_backpressure[g_i];
+                        out_unvalid_flit[g_i] = in_unvalid_flit[noc::kEastPort];
                     end
 
                     noc::goWest: begin
@@ -344,13 +306,6 @@ module lookahead_router #(
               {fifo_head[noc::kWestPort].flit[PortWidth-1:5], next_hop_routing[noc::kWestPort]};
                         rd_fifo[g_i][noc::kWestPort] = no_backpressure[g_i];
                         out_unvalid_flit[g_i] = in_unvalid_flit[noc::kWestPort];
-                    end
-
-                    noc::goEast: begin
-                        data_out_crossbar[g_i] = ~insert_lookahead_routing[g_i] ? fifo_head[noc::kEastPort] :
-              {fifo_head[noc::kEastPort].flit[PortWidth-1:5], next_hop_routing[noc::kEastPort]};
-                        rd_fifo[g_i][noc::kEastPort] = no_backpressure[g_i];
-                        out_unvalid_flit[g_i] = in_unvalid_flit[noc::kEastPort];
                     end
 
                     noc::goLocal: begin
@@ -365,8 +320,6 @@ module lookahead_router #(
                 endcase
             end
 
-
-            // Sample output
             always_ff @(posedge clk) begin
                 if (rst) begin
                     last_flit[g_i] <= '0;
@@ -513,7 +466,7 @@ module lookahead_router #(
         $fatal(2'd2, "Fail: PortWidth must match header_t width.");
     end
 
-    for (g_i = 0; g_i < 4; g_i++) begin : gen_assert_legal_routing_request
+    for (g_i = 0; g_i < 2; g_i++) begin : gen_assert_legal_routing_request
         a_no_request_to_same_port :
         assert property (@(posedge clk) disable iff (rst) final_routing_request[g_i][g_i] == 1'b0)
         else $error("Fail: a_no_request_to_same_port");

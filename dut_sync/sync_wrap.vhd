@@ -11,8 +11,8 @@ use work.nocpackage.all;
 entity sync_wrap is
   generic (
     XLEN      : integer := 4;
-    YLEN      : integer := 4;
-    TILES_NUM : integer := 16;
+    YLEN      : integer := 0;
+    TILES_NUM : integer := 4;
     flit_size : integer := 34);
 
   port (
