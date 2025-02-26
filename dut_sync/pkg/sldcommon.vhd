@@ -15,7 +15,7 @@ package sldcommon is
   type monitor_noc_type is record
     clk          : std_ulogic;
     tile_inject  : std_ulogic;
-    queue_full   : std_logic_vector(4 downto 0);
+    queue_full   : std_logic_vector(2 downto 0);
   end record;
 
   type monitor_noc_vector is array (natural range <>) of monitor_noc_type;

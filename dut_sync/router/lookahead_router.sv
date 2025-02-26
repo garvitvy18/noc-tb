@@ -177,7 +177,7 @@ module lookahead_router #(
             assign rd_fifo_or[g_i] = rd_fifo[0][g_i] | rd_fifo[1][g_i] | rd_fifo[2][g_i];
 
             // Write FIFO if data is valid.
-            assign wr_fifo[g_i] = ~data_void_in[g_i];
+            assign wr_fifo[g_i] = data_void_in[g_i];
 
             // Input FIFO
             router_fifo #(

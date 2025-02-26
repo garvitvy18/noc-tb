@@ -45,11 +45,11 @@ package nocpackage is
   -- |  PREAMBLE  |  Src Y  |  Src X  |  Dst Y  |  Dst X  |  Msg. type  |  Reserved  |LEWSN|
   --
 
-  constant HEADER_ROUTE_L : natural := 4;
-  constant HEADER_ROUTE_E : natural := 3;
-  constant HEADER_ROUTE_W : natural := 2;
-  constant HEADER_ROUTE_S : natural := 1;
-  constant HEADER_ROUTE_N : natural := 0;
+  constant HEADER_ROUTE_L : natural := 2;
+  constant HEADER_ROUTE_E : natural := 1;
+  constant HEADER_ROUTE_W : natural := 0;
+--  constant HEADER_ROUTE_S : natural := 1;
+ -- constant HEADER_ROUTE_N : natural := 0;
 
   constant PREAMBLE_WIDTH      : natural := 2;
   constant YX_WIDTH            : natural := 5;

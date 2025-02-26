@@ -207,11 +207,11 @@ begin  -- ring
     end generate east_normal;
 
     -- Local Port (always active)
-    data_p_in(i) <= input_port(i);
-    data_void_in_i(i)(2) <= data_void_in(i);
-    stop_in_i(i)(2) <= stop_in(i);
-    data_void_out(i) <= data_void_out_i(i)(2);
-    stop_out(i) <= stop_out_i(i)(2);
+--    data_p_in(i) <= input_port(i);
+--    data_void_in_i(i)(2) <= data_void_in(i);
+--    stop_in_i(i)(2) <= stop_in(i);
+--    data_void_out(i) <= data_void_out_i(i)(2);
+--    stop_out(i) <= stop_out_i(i)(2);
 
   end generate ringgen;
 
