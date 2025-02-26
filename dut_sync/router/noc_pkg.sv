@@ -55,8 +55,8 @@ package noc;
     // Convert integer to corresponding noc_port_t
     function automatic noc_port_t int2noc_port(input int i);
         case (i)
-            0: return kEastPort;
-            1: return kWestPort;
+            1: return kEastPort;
+            0: return kWestPort;
             2: return kLocalPort;
             default: return kEastPort;
         endcase
