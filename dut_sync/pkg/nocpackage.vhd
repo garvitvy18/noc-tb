@@ -50,6 +50,8 @@ package nocpackage is
   constant HEADER_ROUTE_W : natural := 0;
 --  constant HEADER_ROUTE_S : natural := 1;
  -- constant HEADER_ROUTE_N : natural := 0;
+--   constant HEADER_ROUTE_S : natural := 1;
+--   constant HEADER_ROUTE_N : natural := 0;
 
   constant PREAMBLE_WIDTH      : natural := 2;
   constant YX_WIDTH            : natural := 5;
@@ -281,9 +283,9 @@ package nocpackage is
     return boolean;
 
   function create_header (
-    local_y           : local_yx;
+    -- local_y           : local_yx;
     local_x           : local_yx;
-    remote_y          : local_yx;
+    -- remote_y          : local_yx;
     remote_x          : local_yx;
     msg_type          : noc_msg_type;
     reserved          : reserved_field_type)
@@ -363,9 +365,9 @@ package body nocpackage is
   end is_getm;
 
   function create_header (
-    local_y           : local_yx;
+    -- local_y           : local_yx;
     local_x           : local_yx;
-    remote_y          : local_yx;
+    -- remote_y          : local_yx;
     remote_x          : local_yx;
     msg_type          : noc_msg_type;
     reserved          : reserved_field_type)
@@ -376,38 +378,39 @@ package body nocpackage is
     header := (others => '0');
     header(NOC_FLIT_SIZE - 1 downto
            NOC_FLIT_SIZE - PREAMBLE_WIDTH) := PREAMBLE_HEADER;
+    -- header(NOC_FLIT_SIZE - PREAMBLE_WIDTH - 1 downto
+    --       NOC_FLIT_SIZE - PREAMBLE_WIDTH - YX_WIDTH) := "00" & local_y;
     header(NOC_FLIT_SIZE - PREAMBLE_WIDTH - 1 downto
-           NOC_FLIT_SIZE - PREAMBLE_WIDTH - YX_WIDTH) := "00" & local_y;
+           NOC_FLIT_SIZE - PREAMBLE_WIDTH - YX_WIDTH) := "00" & local_x;
+    -- header(NOC_FLIT_SIZE - PREAMBLE_WIDTH - 2*YX_WIDTH - 1 downto
+    --       NOC_FLIT_SIZE - PREAMBLE_WIDTH - 3*YX_WIDTH) := "00" & remote_y;
     header(NOC_FLIT_SIZE - PREAMBLE_WIDTH - YX_WIDTH - 1 downto
-           NOC_FLIT_SIZE - PREAMBLE_WIDTH - 2*YX_WIDTH) := "00" & local_x;
+           NOC_FLIT_SIZE - PREAMBLE_WIDTH - 2*YX_WIDTH) := "00" & remote_x;
     header(NOC_FLIT_SIZE - PREAMBLE_WIDTH - 2*YX_WIDTH - 1 downto
-           NOC_FLIT_SIZE - PREAMBLE_WIDTH - 3*YX_WIDTH) := "00" & remote_y;
-    header(NOC_FLIT_SIZE - PREAMBLE_WIDTH - 3*YX_WIDTH - 1 downto
-           NOC_FLIT_SIZE - PREAMBLE_WIDTH - 4*YX_WIDTH) := "00" & remote_x;
-    header(NOC_FLIT_SIZE - PREAMBLE_WIDTH - 4*YX_WIDTH - 1 downto
-           NOC_FLIT_SIZE - PREAMBLE_WIDTH - 4*YX_WIDTH - MSG_TYPE_WIDTH) := msg_type;
-    header(NOC_FLIT_SIZE - PREAMBLE_WIDTH - 4*YX_WIDTH - MSG_TYPE_WIDTH - 1 downto
-           NOC_FLIT_SIZE - PREAMBLE_WIDTH - 4*YX_WIDTH - MSG_TYPE_WIDTH - RESERVED_WIDTH) := reserved;
+           NOC_FLIT_SIZE - PREAMBLE_WIDTH - 2*YX_WIDTH - MSG_TYPE_WIDTH) := msg_type;
+    header(NOC_FLIT_SIZE - PREAMBLE_WIDTH - 2*YX_WIDTH - MSG_TYPE_WIDTH - 1 downto
+           NOC_FLIT_SIZE - PREAMBLE_WIDTH - 2*YX_WIDTH - MSG_TYPE_WIDTH - RESERVED_WIDTH) := reserved;
 
     if local_x < remote_x then
-      go_right := "01000";
+      go_right := "01000"; -- go_right := "01000";
     else
-      go_right := "10111";
+      go_right := "10111"; -- go_right := "10111";
     end if;
 
     if local_x > remote_x then
-      go_left := "00100";
+      go_left := "00100"; -- go_left := "00100";
     else
-      go_left := "11011";
+      go_left := "11011"; -- go_left := "11011";
     end if;
 
-    if local_y < remote_y then
-      header(NEXT_ROUTING_WIDTH - 1 downto 0) := "01110" and go_left and go_right;
-    else
-      header(NEXT_ROUTING_WIDTH - 1 downto 0) := "01101" and go_left and go_right;
-    end if;
+    -- if local_y < remote_y then
+    --   header(NEXT_ROUTING_WIDTH - 1 downto 0) := "01110" and go_left and go_right;
+    -- else
+    --   header(NEXT_ROUTING_WIDTH - 1 downto 0) := "01101" and go_left and go_right;
+    -- end if;
+	header(NEXT_ROUTING_WIDTH - 1 downto 0) := "01100" and go_left and go_right;
 
-    if local_y = remote_y and local_x = remote_x then
+    if local_x = remote_x then
       header(NEXT_ROUTING_WIDTH - 1 downto 0) := "10000";
     end if;
 

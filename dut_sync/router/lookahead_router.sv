@@ -321,6 +321,7 @@ module lookahead_router #(
             end
 
             always_ff @(posedge clk) begin
+				$display("%t: gen_input_port_enabled | data_void_out[%d] = %d", $time, g_i, data_void_out[g_i]);
                 if (rst) begin
                     last_flit[g_i] <= '0;
                 end else begin
@@ -330,6 +331,7 @@ module lookahead_router #(
                         end
                     end else begin
                         if (~data_void_out[g_i]) begin
+						$display("%t: setting last flit", $time);
                             last_flit[g_i] <= data_out_crossbar[g_i];
                         end
                     end
@@ -387,13 +389,16 @@ module lookahead_router #(
             // Data void out and credits
             if (FifoBypassEnable) begin : gen_data_void_out_acknack
                 always_ff @(posedge clk) begin
+						$display("%t: in acknack", $time);
                     if (rst) begin
                         data_void_out[g_i] <= 1'b1;
                     end else begin
                         if (~forwarding_in_progress[g_i] && no_backpressure[g_i]) begin
+							$display("%t: in forwarding_in_progress and no_backpressure", $time);
                             data_void_out[g_i] <= 1'b1;
                         end else if (no_backpressure[g_i]) begin
                             data_void_out[g_i] <= out_unvalid_flit[g_i];
+							$display("%t: in no_backpressure | data_void_out[%d] = %d | empty[%d] = [%d] & data_void_in[%d] = [%d]", $time, g_i, data_void_out[g_i], g_i, empty[g_i], g_i, data_void_in[g_i]);
                         end
                     end
                 end

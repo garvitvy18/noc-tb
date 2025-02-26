@@ -38,7 +38,7 @@ module gen
    localparam NOC_FLIT_SIZE = 66;
    typedef logic [NOC_FLIT_SIZE-1:0] noc_flit_type;
 
-   localparam NEXT_ROUTING_WIDTH = 5;
+   localparam NEXT_ROUTING_WIDTH = 3;
 
    // NoC Size --> Begin
    localparam XLEN = 4;
@@ -48,9 +48,9 @@ module gen
    const local_yx tile_x[0:TILES_NUM - 1]
      = {
 	3'b000,
-	3'b001,
-        3'b010,
-	 3'b011 //,
+	3'b001, 
+	3'b010,
+	3'b011 //,
 //	3'b000,
 //	3'b001 ,
 //	 3'b010,
@@ -98,42 +98,43 @@ module gen
       );
 
       noc_flit_type header;
-      logic [NEXT_ROUTING_WIDTH-1:0] go_left, go_right, go_up, go_down;
- logic [YX_WIDTH-1:0] dist_cw, dist_ccw;
+      logic [NEXT_ROUTING_WIDTH-1:0] go_left, go_right; // go_up, go_down;
+      //logic [YX_WIDTH-1:0] dist_cw, dist_ccw;
       header = 0;
       header[NOC_FLIT_SIZE - 1 : NOC_FLIT_SIZE - PREAMBLE_WIDTH] = preamble_header;
 //      header[NOC_FLIT_SIZE - PREAMBLE_WIDTH - 1 : NOC_FLIT_SIZE - PREAMBLE_WIDTH - YX_WIDTH] =  local_y;
-      header[NOC_FLIT_SIZE - PREAMBLE_WIDTH - YX_WIDTH - 1 : NOC_FLIT_SIZE - PREAMBLE_WIDTH - 2*YX_WIDTH] = local_x;
+      header[NOC_FLIT_SIZE - PREAMBLE_WIDTH - 1 : NOC_FLIT_SIZE - PREAMBLE_WIDTH - YX_WIDTH] = local_x;
 //      header[NOC_FLIT_SIZE - PREAMBLE_WIDTH - 2*YX_WIDTH - 1 : NOC_FLIT_SIZE - PREAMBLE_WIDTH - 3*YX_WIDTH] = remote_y;
-      header[NOC_FLIT_SIZE - PREAMBLE_WIDTH - 3*YX_WIDTH - 1 : NOC_FLIT_SIZE - PREAMBLE_WIDTH - 4*YX_WIDTH] = remote_x;
-      header[NOC_FLIT_SIZE - PREAMBLE_WIDTH - 4*YX_WIDTH - 1 : NOC_FLIT_SIZE - PREAMBLE_WIDTH - 4*YX_WIDTH - MSG_TYPE_WIDTH] = msg_type;
-      header[NOC_FLIT_SIZE - PREAMBLE_WIDTH - 4*YX_WIDTH - MSG_TYPE_WIDTH - 1 : NOC_FLIT_SIZE - PREAMBLE_WIDTH - 4*YX_WIDTH - MSG_TYPE_WIDTH - RESERVED_WIDTH] = reserved;
+      header[NOC_FLIT_SIZE - PREAMBLE_WIDTH - YX_WIDTH - 1 : NOC_FLIT_SIZE - PREAMBLE_WIDTH - 2*YX_WIDTH] = remote_x;
+      header[NOC_FLIT_SIZE - PREAMBLE_WIDTH - 2*YX_WIDTH - 1 : NOC_FLIT_SIZE - PREAMBLE_WIDTH - 2*YX_WIDTH - MSG_TYPE_WIDTH] = msg_type;
+      header[NOC_FLIT_SIZE - PREAMBLE_WIDTH - 2*YX_WIDTH - MSG_TYPE_WIDTH - 1 : NOC_FLIT_SIZE - PREAMBLE_WIDTH - 2*YX_WIDTH - MSG_TYPE_WIDTH - RESERVED_WIDTH] = reserved;
 
     // Determine direction based on local_x and remote_x
     if (local_x < remote_x || (local_x == XLEN-1 && remote_x == 0))
         go_right = 3'b010; // Move East (1)
     else
-        go_right = 3'b111; // No move in this direction
+        go_right = 3'b101; // No move in this direction
 
     if (local_x > remote_x || (local_x == 0 && remote_x == XLEN-1))
         go_left = 3'b001;  // Move West (0)
     else
-        go_left = 3'b111;  // No move in this direction
+        go_left = 3'b110;  // No move in this direction
 
     // Compute shortest path in a Ring (Clockwise vs Counterclockwise)
    // logic [YX_WIDTH-1:0] dist_cw, dist_ccw;
 
-    dist_cw  = (remote_x >= local_x) ? (remote_x - local_x) : (XLEN + remote_x - local_x);
-    dist_ccw = (local_x >= remote_x) ? (local_x - remote_x) : (local_x + XLEN - remote_x);
-
+    //dist_cw  = (remote_x >= local_x) ? (remote_x - local_x) : (XLEN + remote_x - local_x);
+    //dist_ccw = (local_x >= remote_x) ? (local_x - remote_x) : (local_x + XLEN - remote_x);
+	header[NEXT_ROUTING_WIDTH - 1 : 0] = 3'b011 & go_left & go_right;
     // Select routing direction (Ring-based decision with wrap-around)
     if (local_x == remote_x) begin
-        header[2:0] = 3'b100; // Local (2)
-    end else if (dist_cw <= dist_ccw) begin
-        header[2:0] = 3'b010 & go_right; // Move East (1) or Wrap-around to 0
-    end else begin
-        header[2:0] = 3'b001 & go_left;  // Move West (0) or Wrap-around to last tile
-    end
+        header[NEXT_ROUTING_WIDTH - 1 : 0] = 3'b100; // Enable (2)
+	end
+    // end else if (dist_cw <= dist_ccw) begin
+    //     header[2:0] = 3'b010 & go_right; // Move East (1) or Wrap-around to 0
+    // end else begin
+    //     header[2:0] = 3'b001 & go_left;  // Move West (0) or Wrap-around to last tile
+    // end
 
 
       return header;
@@ -260,7 +261,8 @@ module gen
 						   3'b111,
 						   snd_count[i][RESERVED_WIDTH-1:0]);
 		     input_data[i][NOC_FLIT_SIZE-1:NOC_FLIT_SIZE-2] = preamble_1flit;
-		     $display("%t: Tile %d - Send %d", $time, i, dst_next[i]);
+		     //$display("%t: Tile %d - Send %d", $time, i, dst_next[i]);
+			 $display("%t: Tile %d - Send %d | input_req_single [%d] = %d", $time, i, dst_next[i], i, input_req[i]);
 		  end // if (input_ack[i])
 	       end // if (PKT_SIZE == 1)
 	       else begin
@@ -277,7 +279,8 @@ module gen
 						      tile_x[dst_next[i]],
 						      3'b111,
 						      snd_count[i][RESERVED_WIDTH-1:0]);
-			$display("%t: Tile %d - Send %d", $time, i, dst_next[i]);
+			// $display("%t: Tile %d - Send %d", $time, i, dst_next[i]);
+			$display("%t: Tile %d - Send %d | input_req_head [%d] = %d", $time, i, dst_next[i], i, input_req[i]);
  		     end // if (input_ack[i])
 		  end // if (| snd_count[i][$clog2(PKT_SIZE)-1:0] == 1'b0)
 		  else if (& snd_count[i][$clog2(PKT_SIZE)-1:0] == 1'b1) begin
@@ -288,6 +291,7 @@ module gen
 		     	input_req[i] = 1'b1;
 		     	input_data[i][NOC_FLIT_SIZE-1:NOC_FLIT_SIZE-2] = preamble_tail;
 		     	input_data[i][NOC_FLIT_SIZE-3:0] = snd_count[i];
+			$display("%t: Tile %d | input_req_tail [%d] = %d", $time, i, i, input_req[i]);
 		     end
 		  end
 		  else begin
@@ -298,6 +302,7 @@ module gen
 		     	input_req[i] = 1'b1;
 		     	input_data[i][NOC_FLIT_SIZE-1:NOC_FLIT_SIZE-2] = preamble_body;
 		     	input_data[i][NOC_FLIT_SIZE-3:0] = snd_count[i];
+			$display("%t: Tile %d | input_req_body [%d] = %d", $time, i, i, input_req[i]);
 		     end
 		  end // else: !if(& snd_count[i][$clog2(PKT_SIZE)-1:0] == 1'b1)
 
@@ -339,8 +344,8 @@ module gen
 	 assign output_ack[i] = 1'b1;
 	 assign new_flit[i] = output_req[i] & output_ack[i];
 	 assign new_packet[i] = output_data[i][NOC_FLIT_SIZE-1] & new_flit[i];
-	 assign src_next[i] = output_data[i][NOC_FLIT_SIZE - PREAMBLE_WIDTH - 1:NOC_FLIT_SIZE - PREAMBLE_WIDTH - YX_WIDTH] * XLEN
-                          + output_data[i][NOC_FLIT_SIZE - PREAMBLE_WIDTH - YX_WIDTH - 1:NOC_FLIT_SIZE - PREAMBLE_WIDTH - 2*YX_WIDTH];
+	// assign src_next[i] = output_data[i][NOC_FLIT_SIZE - PREAMBLE_WIDTH - 1:NOC_FLIT_SIZE - PREAMBLE_WIDTH - YX_WIDTH] * XLEN +
+	 assign src_next[i] =  output_data[i][NOC_FLIT_SIZE - PREAMBLE_WIDTH - YX_WIDTH - 1:NOC_FLIT_SIZE - PREAMBLE_WIDTH - 2*YX_WIDTH];
 
 	 always_ff @(posedge clk) begin
 	    if (rstn == 1'b0 || soft_reset == 1'b1) begin
@@ -348,7 +353,9 @@ module gen
 	       total_rcv[i] <= '0;
 	    end
 	    else begin
+			$display("%t: Before new flit | output_req[%d] = %d, output_ack[%d] = %d", $time, i, output_req[i], i, output_ack[i]);
 	       if (new_flit[i] == 1'b1) begin
+			$display("%t: New flit", $time);
 		  if (new_packet[i] == 1'b1) begin
 		     $display("%t: Tile %d - Receiving new packet", $time, i);
 		     src_current[i] <= src_next[i];
