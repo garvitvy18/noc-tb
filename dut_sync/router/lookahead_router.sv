@@ -125,14 +125,14 @@ module lookahead_router #(
     logic [2:0][2:0] final_routing_request;  // ri lint_check_waive NOT_READ
     logic [2:0][2:0] next_hop_routing;
 
-    logic [2:0][3:0] transp_final_routing_request;
+    logic [2:0][1:0] transp_final_routing_request;
 
     logic [2:0][2:0] enhanc_routing_configuration;
 
-    logic [2:0][3:0] routing_configuration;
-    logic [2:0][3:0] saved_routing_configuration;
-    logic [2:0][3:0] grant;
-    logic [2:0] grant_valid;
+    logic [2:0][1:0] routing_configuration;
+    logic [2:0][1:0] saved_routing_configuration;
+    logic [1:0][1:0] grant;
+    logic [1:0] grant_valid;
 
     logic [2:0][2:0] rd_fifo;
     logic [2:0] no_backpressure;
@@ -321,7 +321,7 @@ module lookahead_router #(
             end
 
             always_ff @(posedge clk) begin
-				$display("%t: gen_input_port_enabled | data_void_out[%d] = %d", $time, g_i, data_void_out[g_i]);
+				$display("%t: gen_output_port_enabled | data_void_out[%d] = %d", $time, g_i, data_void_out[g_i]);
                 if (rst) begin
                     last_flit[g_i] <= '0;
                 end else begin
