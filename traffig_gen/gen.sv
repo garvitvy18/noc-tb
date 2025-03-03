@@ -345,8 +345,7 @@ module gen
 	 assign new_flit[i] = output_req[i] & output_ack[i];
 	 assign new_packet[i] = output_data[i][NOC_FLIT_SIZE-1] & new_flit[i];
 	// assign src_next[i] = output_data[i][NOC_FLIT_SIZE - PREAMBLE_WIDTH - 1:NOC_FLIT_SIZE - PREAMBLE_WIDTH - YX_WIDTH] * XLEN +
-	 assign src_next[i] =  output_data[i][NOC_FLIT_SIZE - PREAMBLE_WIDTH - YX_WIDTH - 1:NOC_FLIT_SIZE - PREAMBLE_WIDTH - 2*YX_WIDTH];
-
+	assign src_next[i] =  output_data[i][NOC_FLIT_SIZE - PREAMBLE_WIDTH - 1 : NOC_FLIT_SIZE - PREAMBLE_WIDTH - YX_WIDTH];
 	 always_ff @(posedge clk) begin
 	    if (rstn == 1'b0 || soft_reset == 1'b1) begin
 	       src_current[i] <= '0;

@@ -25,9 +25,9 @@ package noc;
     parameter bit [2:0] BottomRightRouterPorts = 3'b101; // Enable West and Local
 
     typedef enum logic [2:0] {
+        kLocalPort = 3'd2,   // Local (for local communication)
         kEastPort  = 3'd1,  // Clockwise (East)
-        kWestPort  = 3'd0,  // Counter-clockwise (West)
-        kLocalPort = 3'd2   // Local (for local communication)
+        kWestPort  = 3'd0  // Counter-clockwise (West)
     } noc_port_t;
 
     // One-hot encoding of the ports for routing
@@ -39,9 +39,9 @@ package noc;
 
     // Function to return one-hot encoding for a given port
     function automatic direction_t get_onehot_port(input noc_port_t port);
-        get_onehot_port.go_east  = (port == kEastPort);
-        get_onehot_port.go_west  = (port == kWestPort);
         get_onehot_port.go_local = (port == kLocalPort);
+	get_onehot_port.go_east  = (port == kEastPort);
+        get_onehot_port.go_west  = (port == kWestPort);
     endfunction
 
     // Function to convert direction_t to noc_port_t
