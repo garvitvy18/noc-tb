@@ -32,9 +32,9 @@ package noc;
 
     // One-hot encoding of the ports for routing
     typedef struct packed {
+        logic go_local;
         logic go_east;
         logic go_west;
-        logic go_local;
     } direction_t;
 
     // Function to return one-hot encoding for a given port
@@ -55,8 +55,8 @@ package noc;
     // Convert integer to corresponding noc_port_t
     function automatic noc_port_t int2noc_port(input int i);
         case (i)
-            1: return kEastPort;
             0: return kWestPort;
+            1: return kEastPort;
             2: return kLocalPort;
             default: return kEastPort;
         endcase

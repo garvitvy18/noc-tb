@@ -98,7 +98,7 @@ module lookahead_router #(
     typedef struct packed {
         noc::preamble_t preamble;
         packet_info_t info;
-        noc::direction_t routing;
+    	noc::direction_t routing;
     } header_t;
 
     typedef logic [PortWidth-1:0] payload_t;
@@ -296,21 +296,21 @@ module lookahead_router #(
                 unique case (enhanc_routing_configuration[g_i])
                     noc::goEast: begin
                         data_out_crossbar[g_i] = ~insert_lookahead_routing[g_i] ? fifo_head[noc::kEastPort] :
-              {fifo_head[noc::kEastPort].flit[PortWidth-1:5], next_hop_routing[noc::kEastPort]};
+              {fifo_head[noc::kEastPort].flit[PortWidth-1:3], next_hop_routing[noc::kEastPort]};
                         rd_fifo[g_i][noc::kEastPort] = no_backpressure[g_i];
                         out_unvalid_flit[g_i] = in_unvalid_flit[noc::kEastPort];
                     end
 
                     noc::goWest: begin
                         data_out_crossbar[g_i] = ~insert_lookahead_routing[g_i] ? fifo_head[noc::kWestPort] :
-              {fifo_head[noc::kWestPort].flit[PortWidth-1:5], next_hop_routing[noc::kWestPort]};
+              {fifo_head[noc::kWestPort].flit[PortWidth-1:3], next_hop_routing[noc::kWestPort]};
                         rd_fifo[g_i][noc::kWestPort] = no_backpressure[g_i];
                         out_unvalid_flit[g_i] = in_unvalid_flit[noc::kWestPort];
                     end
 
                     noc::goLocal: begin
                         data_out_crossbar[g_i] = ~insert_lookahead_routing[g_i] ? fifo_head[noc::kLocalPort] :
-              {fifo_head[noc::kLocalPort].flit[PortWidth-1:5], next_hop_routing[noc::kLocalPort]};
+              {fifo_head[noc::kLocalPort].flit[PortWidth-1:3], next_hop_routing[noc::kLocalPort]};
                         rd_fifo[g_i][noc::kLocalPort] = no_backpressure[g_i];
                         out_unvalid_flit[g_i] = in_unvalid_flit[noc::kLocalPort];
                     end
