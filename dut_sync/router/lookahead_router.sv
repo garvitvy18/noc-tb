@@ -131,8 +131,8 @@ module lookahead_router #(
 
     logic [2:0][1:0] routing_configuration;
     logic [2:0][1:0] saved_routing_configuration;
-    logic [1:0][1:0] grant;
-    logic [1:0] grant_valid;
+    logic [2:0][1:0] grant;
+    logic [2:0] grant_valid;
 
     logic [2:0][2:0] rd_fifo;
     logic [2:0] no_backpressure;
