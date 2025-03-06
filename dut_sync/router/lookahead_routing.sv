@@ -53,11 +53,11 @@ module lookahead_routing (
     
     // East (Clockwise) movement
     assign next_position_d[noc::kEastPort].x = position.x + 1'b1;  // Move to the next tile (East in the ring)
-    assign next_position_d[noc::kEastPort].y = position.y;         // y-coordinate remains the same
+    //assign next_position_d[noc::kEastPort].y = position.y;         // y-coordinate remains the same
 
     // West (Counter-clockwise) movement
     assign next_position_d[noc::kWestPort].x = position.x - 1'b1;  // Move to the previous tile (West in the ring)
-    assign next_position_d[noc::kWestPort].y = position.y;         // y-coordinate remains the same
+    //assign next_position_d[noc::kWestPort].y = position.y;         // y-coordinate remains the same
 
     // Local movement (when already at the destination)
     //assign next_position_d.x = position.x;         // Stay at the current tile
