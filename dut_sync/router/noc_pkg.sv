@@ -39,9 +39,9 @@ package noc;
 
     // Function to return one-hot encoding for a given port
     function automatic direction_t get_onehot_port(input noc_port_t port);
-        get_onehot_port.go_local = (port == kLocalPort);
-	get_onehot_port.go_east  = (port == kEastPort);
         get_onehot_port.go_west  = (port == kWestPort);
+	get_onehot_port.go_east  = (port == kEastPort);
+	get_onehot_port.go_local = (port == kLocalPort);
     endfunction
 
     // Function to convert direction_t to noc_port_t

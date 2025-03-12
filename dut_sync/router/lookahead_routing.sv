@@ -33,23 +33,26 @@ module lookahead_routing (
 );
 
     // Function to compute next routing direction based on ring topology
-    function automatic noc::direction_t routing(input noc::xy_t position,
+    function automatic noc::direction_t routing(input noc::xy_t next_position,
                                                 input noc::xy_t destination);
+	noc::direction_t west,east;
+	west = next_position.x>destination.x?noc::goWest:~noc::goWest;
+	east = next_position.x<destination.x?noc::goEast:~noc::goEast;
+	routing=west&east;
         // Determine clockwise (East) or counter-clockwise (West) based on destination
-        if (position.x < destination.x) begin
+       // if (position.x < destination.x) begin
             // If destination is ahead in the ring, route clockwise (East)
-            routing = noc::goEast;  // Clockwise direction
-        end else if (position.x > destination.x) begin
+          //  routing = noc::goEast;  // Clockwise direction
+       // end else if (position.x > destination.x) begin
             // If destination is behind in the ring, route counter-clockwise (West)
-            routing = noc::goWest;  // Counter-clockwise direction
-        end else begin
+           // routing = noc::goWest;  // Counter-clockwise direction
             // If already at destination (same position), route locally
-            routing = noc::goLocal; // Stay at local port (no movement)
-        end
+          //  routing = noc::goLocal; // Stay at local port (no movement)
+       // end
     endfunction
 
     // Compute next position for each port (East, West, and Local directions)
-    noc::xy_t [3:0] next_position_d, next_position_q;
+    noc::xy_t [1:0] next_position_d, next_position_q;
     
     // East (Clockwise) movement
     assign next_position_d[noc::kEastPort].x = position.x + 1'b1;  // Move to the next tile (East in the ring)

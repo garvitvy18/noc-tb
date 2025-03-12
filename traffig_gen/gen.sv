@@ -261,8 +261,8 @@ module gen
 						   3'b111,
 						   snd_count[i][RESERVED_WIDTH-1:0]);
 		     input_data[i][NOC_FLIT_SIZE-1:NOC_FLIT_SIZE-2] = preamble_1flit;
-		     //$display("%t: Tile %d - Send %d", $time, i, dst_next[i]);
-			 $display("%t: Tile %d - Send %d | input_req_single [%d] = %d", $time, i, dst_next[i], i, input_req[i]);
+		     $display("%t: Tile %d - Send %d", $time, i, dst_next[i]);
+	//		 $display("%t: Tile %d - Send %d | input_req_single [%d] = %d", $time, i, dst_next[i], i, input_req[i]);
 		  end // if (input_ack[i])
 	       end // if (PKT_SIZE == 1)
 	       else begin
@@ -279,8 +279,8 @@ module gen
 						      tile_x[dst_next[i]],
 						      3'b111,
 						      snd_count[i][RESERVED_WIDTH-1:0]);
-			// $display("%t: Tile %d - Send %d", $time, i, dst_next[i]);
-			$display("%t: Tile %d - Send %d | input_req_head [%d] = %d", $time, i, dst_next[i], i, input_req[i]);
+			 $display("%t: Tile %d - Send %d", $time, i, dst_next[i]);
+		//	$display("%t: Tile %d - Send %d | input_req_head [%d] = %d", $time, i, dst_next[i], i, input_req[i]);
  		     end // if (input_ack[i])
 		  end // if (| snd_count[i][$clog2(PKT_SIZE)-1:0] == 1'b0)
 		  else if (& snd_count[i][$clog2(PKT_SIZE)-1:0] == 1'b1) begin
@@ -291,7 +291,7 @@ module gen
 		     	input_req[i] = 1'b1;
 		     	input_data[i][NOC_FLIT_SIZE-1:NOC_FLIT_SIZE-2] = preamble_tail;
 		     	input_data[i][NOC_FLIT_SIZE-3:0] = snd_count[i];
-			$display("%t: Tile %d | input_req_tail [%d] = %d", $time, i, i, input_req[i]);
+		//	$display("%t: Tile %d | input_req_tail [%d] = %d", $time, i, i, input_req[i]);
 		     end
 		  end
 		  else begin
@@ -302,7 +302,7 @@ module gen
 		     	input_req[i] = 1'b1;
 		     	input_data[i][NOC_FLIT_SIZE-1:NOC_FLIT_SIZE-2] = preamble_body;
 		     	input_data[i][NOC_FLIT_SIZE-3:0] = snd_count[i];
-			$display("%t: Tile %d | input_req_body [%d] = %d", $time, i, i, input_req[i]);
+		//	$display("%t: Tile %d | input_req_body [%d] = %d", $time, i, i, input_req[i]);
 		     end
 		  end // else: !if(& snd_count[i][$clog2(PKT_SIZE)-1:0] == 1'b1)
 
@@ -352,9 +352,9 @@ module gen
 	       total_rcv[i] <= '0;
 	    end
 	    else begin
-			$display("%t: Before new flit | output_req[%d] = %d, output_ack[%d] = %d", $time, i, output_req[i], i, output_ack[i]);
+		//	$display("%t: Before new flit | output_req[%d] = %d, output_ack[%d] = %d", $time, i, output_req[i], i, output_ack[i]);
 	       if (new_flit[i] == 1'b1) begin
-			$display("%t: New flit", $time);
+		//	$display("%t: New flit", $time);
 		  if (new_packet[i] == 1'b1) begin
 		     $display("%t: Tile %d - Receiving new packet", $time, i);
 		     src_current[i] <= src_next[i];
