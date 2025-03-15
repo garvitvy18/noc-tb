@@ -58,7 +58,7 @@ module router_arbiter (
     typedef logic [1:0][1:0] priority_t;
     priority_t priority_mask, priority_mask_next;
     priority_t grant_stage1;
-    logic grant_stage2;
+    logic [1:0]grant_stage2;
 
     // Higher priority is given to request[0] at reset
     localparam priority_t InitialPriority = {
@@ -103,13 +103,13 @@ module router_arbiter (
             assign grant_stage1[g_i][g_j] = request[g_j] & priority_mask[g_j][g_i];
         end
 
-		// assign grant_stage2 = ~(grant_stage1[0] | grant_stage1[1]);     
+		 assign grant_stage2[g_i] = ~(grant_stage1[g_i][0] | grant_stage1[g_i][1]);     
 
-        assign grant[g_i] = grant_stage2 & request[g_i];
+        assign grant[g_i] = &grant_stage2[g_i] & request[g_i];
 
     end  // gen_grant
 
-	assign grant_stage2 = ~(grant_stage1[0] | grant_stage1[1]);
+//	assign grant_stage2 = ~(grant_stage1[0] | grant_stage1[1]);
 
     //
     // Assertions
