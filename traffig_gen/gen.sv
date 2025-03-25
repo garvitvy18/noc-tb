@@ -110,12 +110,12 @@ module gen
       header[NOC_FLIT_SIZE - PREAMBLE_WIDTH - 2*YX_WIDTH - MSG_TYPE_WIDTH - 1 : NOC_FLIT_SIZE - PREAMBLE_WIDTH - 2*YX_WIDTH - MSG_TYPE_WIDTH - RESERVED_WIDTH] = reserved;
 
     // Determine direction based on local_x and remote_x
-    if (local_x < remote_x || (local_x == XLEN-1 && remote_x == 0))
+    if (local_x < remote_x) // || (local_x == XLEN-1 && remote_x == 0))
         go_right = 3'b010; // Move East (1)
     else
         go_right = 3'b101; // No move in this direction
 
-    if (local_x > remote_x || (local_x == 0 && remote_x == XLEN-1))
+    if (local_x > remote_x) // || (local_x == 0 && remote_x == XLEN-1))
         go_left = 3'b001;  // Move West (0)
     else
         go_left = 3'b110;  // No move in this direction
