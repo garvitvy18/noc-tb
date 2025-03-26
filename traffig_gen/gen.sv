@@ -99,7 +99,7 @@ module gen
 
       noc_flit_type header;
       logic [NEXT_ROUTING_WIDTH-1:0] go_left, go_right; // go_up, go_down;
-      //logic [YX_WIDTH-1:0] dist_cw, dist_ccw;
+      logic [YX_WIDTH-1:0] dist_cw, dist_ccw;
       header = 0;
       header[NOC_FLIT_SIZE - 1 : NOC_FLIT_SIZE - PREAMBLE_WIDTH] = preamble_header;
 //      header[NOC_FLIT_SIZE - PREAMBLE_WIDTH - 1 : NOC_FLIT_SIZE - PREAMBLE_WIDTH - YX_WIDTH] =  local_y;
@@ -108,17 +108,31 @@ module gen
       header[NOC_FLIT_SIZE - PREAMBLE_WIDTH - YX_WIDTH - 1 : NOC_FLIT_SIZE - PREAMBLE_WIDTH - 2*YX_WIDTH] = remote_x;
       header[NOC_FLIT_SIZE - PREAMBLE_WIDTH - 2*YX_WIDTH - 1 : NOC_FLIT_SIZE - PREAMBLE_WIDTH - 2*YX_WIDTH - MSG_TYPE_WIDTH] = msg_type;
       header[NOC_FLIT_SIZE - PREAMBLE_WIDTH - 2*YX_WIDTH - MSG_TYPE_WIDTH - 1 : NOC_FLIT_SIZE - PREAMBLE_WIDTH - 2*YX_WIDTH - MSG_TYPE_WIDTH - RESERVED_WIDTH] = reserved;
-
+    dist_cw  = (remote_x - local_x + XLEN) % XLEN;
+    dist_ccw = (local_x - remote_x + XLEN) % XLEN;
     // Determine direction based on local_x and remote_x
-    if (local_x < remote_x) // || (local_x == XLEN-1 && remote_x == 0))
-        go_right = 3'b010; // Move East (1)
-    else
-        go_right = 3'b101; // No move in this direction
+     if (local_x < remote_x) begin // || (local_x == XLEN-1 && remote_x == 0))
+      if(dist_cw > dist_ccw) begin
+	      go_left = 3'b001;
+              go_right = 3'b101;
+      end
+      else if(dist_ccw >= dist_cw) begin
+	    go_right = 3'b010; // Move East (1)
+            go_left = 3'b110;
+      end
 
-    if (local_x > remote_x) // || (local_x == 0 && remote_x == XLEN-1))
-        go_left = 3'b001;  // Move West (0)
-    else
-        go_left = 3'b110;  // No move in this direction
+    end
+    if (local_x > remote_x) begin
+       if(dist_cw > dist_ccw) begin
+              go_left = 3'b001;
+              go_right = 3'b101;
+      end
+      else if(dist_ccw >= dist_cw) begin
+            go_right = 3'b010; // Move East (1)
+            go_left = 3'b110;
+      end
+
+    end
 
     // Compute shortest path in a Ring (Clockwise vs Counterclockwise)
    // logic [YX_WIDTH-1:0] dist_cw, dist_ccw;
@@ -127,15 +141,15 @@ module gen
     //dist_ccw = (local_x >= remote_x) ? (local_x - remote_x) : (local_x + XLEN - remote_x);
 	header[NEXT_ROUTING_WIDTH - 1 : 0] = 3'b011 & go_left & go_right;
     // Select routing direction (Ring-based decision with wrap-around)
-    if (local_x == remote_x) begin
-        header[NEXT_ROUTING_WIDTH - 1 : 0] = 3'b100; // Enable (2)
-	end
     // end else if (dist_cw <= dist_ccw) begin
     //     header[2:0] = 3'b010 & go_right; // Move East (1) or Wrap-around to 0
     // end else begin
     //     header[2:0] = 3'b001 & go_left;  // Move West (0) or Wrap-around to last tile
     // end
 
+    if (local_x == remote_x) begin
+        header[NEXT_ROUTING_WIDTH - 1 : 0] = 3'b100; // Enable (2)
+    end
 
       return header;
    endfunction
@@ -323,6 +337,7 @@ module gen
 	       end
 	       if (incr_snd_count[i] == 1'b1) begin
 		 snd_count[i] <= snd_count[i] + 1;
+		 $display("snd_count , %d", snd_count[i]);
 	       end
 	    end // else: !if(rstn == 1'b0)
 	 end // always_ff @

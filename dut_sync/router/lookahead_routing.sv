@@ -36,9 +36,23 @@ module lookahead_routing (
     function automatic noc::direction_t routing(input noc::xy_t next_position,
                                                 input noc::xy_t destination);
 	noc::direction_t west,east;
-	west = next_position.x>destination.x?noc::goWest:~noc::goWest;
-	east = next_position.x<destination.x?noc::goEast:~noc::goEast;
-	routing=west&east;
+//	west = next_position.x>destination.x?noc::goWest:~noc::goWest;
+//	east = next_position.x<destination.x?noc::goEast:~noc::goEast;
+        int dist_cw  = (destination.x - next_position.x + noc::kRingSize) % noc::kRingSize;
+        int dist_ccw = (next_position.x - destination.x + noc::kRingSize) % noc::kRingSize;
+        if (dist_cw == 0 && dist_ccw == 0)
+            routing = noc::goLocal; // Already at destination
+        else if (dist_cw <= dist_ccw) begin
+            east = noc::goEast; // 3'b010
+	    west = ~noc::goWest;
+	    routing=west&east;
+        end else begin
+            west = noc::goWest; // 3'b001
+	    east = ~noc::goEast;
+	    routing=west&east;
+        end
+
+        //routing=west&east;
         // Determine clockwise (East) or counter-clockwise (West) based on destination
        // if (position.x < destination.x) begin
             // If destination is ahead in the ring, route clockwise (East)
@@ -75,7 +89,7 @@ module lookahead_routing (
         unique case (current_routing)
             noc::goEast: next_routing = routing(next_position_q[noc::kEastPort], destination); // Clockwise (East)
             noc::goWest: next_routing = routing(next_position_q[noc::kWestPort], destination); // Counter-clockwise (West)
-            //noc::goLocal: next_routing = noc::goLocal;  // Stay at local port (no movement)
+           // noc::goLocal: next_routing = noc::goLocal;  // Stay at local port (no movement)
             default: next_routing = current_routing;  // Default to local if nothing else
         endcase
     end

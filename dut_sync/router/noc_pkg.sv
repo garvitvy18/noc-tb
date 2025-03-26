@@ -12,6 +12,10 @@ package noc;
 
     // Message Type
     parameter int unsigned messageTypeWidth = 5;
+	
+    //
+    //Ring Size Parameter
+    parameter int unsigned kRingSize = 4;
 
     //
     // Direction constants, types and functions
