@@ -3,7 +3,7 @@ module lookahead_router_wrapper #(
     parameter int unsigned Width = 32,
     parameter bit [2:0] Ports = noc::AllPorts,
     parameter int unsigned DEST_SIZE = 1,
-    parameter int unsigned QUEUE_SIZE = 4
+    parameter int unsigned QUEUE_SIZE = 16
 ) (
     input  logic clk,
     input  logic rst,

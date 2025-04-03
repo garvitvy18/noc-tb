@@ -34,11 +34,12 @@ module lookahead_routing (
 
     // Function to compute next routing direction based on ring topology
     function automatic noc::direction_t routing(input noc::xy_t next_position,
-                                                input noc::xy_t destination);
+                                                input noc::xy_t destination,
+						input noc::direction_t current_routing);
 	noc::direction_t west,east;
 //	west = next_position.x>destination.x?noc::goWest:~noc::goWest;
 //	east = next_position.x<destination.x?noc::goEast:~noc::goEast;
-        int dist_cw  = (destination.x - next_position.x + noc::kRingSize) % noc::kRingSize;
+  /*      int dist_cw  = (destination.x - next_position.x + noc::kRingSize) % noc::kRingSize;
         int dist_ccw = (next_position.x - destination.x + noc::kRingSize) % noc::kRingSize;
         if (dist_cw == 0 && dist_ccw == 0)
             routing = noc::goLocal; // Already at destination
@@ -51,7 +52,15 @@ module lookahead_routing (
 	    east = ~noc::goEast;
 	    routing=west&east;
         end
-
+*/
+	if(next_position.x == destination.x) begin
+		routing = noc::goLocal;
+	end
+	else
+		routing = current_routing;
+	
+//	else if (current_routing.go_west)
+//		routing = noc::goWest;
         //routing=west&east;
         // Determine clockwise (East) or counter-clockwise (West) based on destination
        // if (position.x < destination.x) begin
@@ -69,16 +78,18 @@ module lookahead_routing (
     noc::xy_t [1:0] next_position_d, next_position_q;
     
     // East (Clockwise) movement
-    assign next_position_d[noc::kEastPort].x = position.x + 1'b1;  // Move to the next tile (East in the ring)
+//    assign next_position_d[noc::kEastPort].x = position.x + 1'b1;  // Move to the next tile (East in the ring)
     //assign next_position_d[noc::kEastPort].y = position.y;         // y-coordinate remains the same
 
     // West (Counter-clockwise) movement
-    assign next_position_d[noc::kWestPort].x = position.x - 1'b1;  // Move to the previous tile (West in the ring)
+//    assign next_position_d[noc::kWestPort].x = position.x - 1'b1;  // Move to the previous tile (West in the ring)
     //assign next_position_d[noc::kWestPort].y = position.y;         // y-coordinate remains the same
 
     // Local movement (when already at the destination)
     //assign next_position_d.x = position.x;         // Stay at the current tile
     //assign next_position_d.y = position.y;         // y-coordinate remains the same
+assign next_position_d[noc::kEastPort].x = (position.x + 1) % noc::kRingSize;
+assign next_position_d[noc::kWestPort].x = (position.x + noc::kRingSize - 1) % noc::kRingSize;
 
     always_ff @(posedge clk) begin
         next_position_q <= next_position_d;
@@ -87,9 +98,9 @@ module lookahead_routing (
     always_comb begin
         // Routing decision based on current direction (East, West, or Local)
         unique case (current_routing)
-            noc::goEast: next_routing = routing(next_position_q[noc::kEastPort], destination); // Clockwise (East)
-            noc::goWest: next_routing = routing(next_position_q[noc::kWestPort], destination); // Counter-clockwise (West)
-           // noc::goLocal: next_routing = noc::goLocal;  // Stay at local port (no movement)
+            noc::goEast: next_routing = routing(next_position_q[noc::kEastPort], destination, current_routing); // Clockwise (East)
+            noc::goWest: next_routing = routing(next_position_q[noc::kWestPort], destination, current_routing); // Counter-clockwise (West)
+          //  noc::goLocal: next_routing = noc::goLocal;  // Stay at local port (no movement)
             default: next_routing = current_routing;  // Default to local if nothing else
         endcase
     end
