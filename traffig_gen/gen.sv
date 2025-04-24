@@ -100,7 +100,7 @@ module gen
       noc_flit_type header;
       logic [NEXT_ROUTING_WIDTH-1:0] go_left, go_right; // go_up, go_down;
       logic [YX_WIDTH-1:0] dist_cw, dist_ccw;
-      header = 0;
+/*      header = 0;
       header[NOC_FLIT_SIZE - 1 : NOC_FLIT_SIZE - PREAMBLE_WIDTH] = preamble_header;
 //      header[NOC_FLIT_SIZE - PREAMBLE_WIDTH - 1 : NOC_FLIT_SIZE - PREAMBLE_WIDTH - YX_WIDTH] =  local_y;
       header[NOC_FLIT_SIZE - PREAMBLE_WIDTH - 1 : NOC_FLIT_SIZE - PREAMBLE_WIDTH - YX_WIDTH] = local_x;
@@ -108,6 +108,15 @@ module gen
       header[NOC_FLIT_SIZE - PREAMBLE_WIDTH - YX_WIDTH - 1 : NOC_FLIT_SIZE - PREAMBLE_WIDTH - 2*YX_WIDTH] = remote_x;
       header[NOC_FLIT_SIZE - PREAMBLE_WIDTH - 2*YX_WIDTH - 1 : NOC_FLIT_SIZE - PREAMBLE_WIDTH - 2*YX_WIDTH - MSG_TYPE_WIDTH] = msg_type;
       header[NOC_FLIT_SIZE - PREAMBLE_WIDTH - 2*YX_WIDTH - MSG_TYPE_WIDTH - 1 : NOC_FLIT_SIZE - PREAMBLE_WIDTH - 2*YX_WIDTH - MSG_TYPE_WIDTH - RESERVED_WIDTH] = reserved;
+   */
+      header = 0;
+      header[NOC_FLIT_SIZE - 1 : NOC_FLIT_SIZE - PREAMBLE_WIDTH] = preamble_header;
+      header[NOC_FLIT_SIZE - PREAMBLE_WIDTH - 1 : NOC_FLIT_SIZE - PREAMBLE_WIDTH - YX_WIDTH] =  0;
+      header[NOC_FLIT_SIZE - PREAMBLE_WIDTH - YX_WIDTH - 1 : NOC_FLIT_SIZE - PREAMBLE_WIDTH - 2*YX_WIDTH] = local_x;
+      header[NOC_FLIT_SIZE - PREAMBLE_WIDTH - 2*YX_WIDTH - 1 : NOC_FLIT_SIZE - PREAMBLE_WIDTH - 3*YX_WIDTH] = 0;
+      header[NOC_FLIT_SIZE - PREAMBLE_WIDTH - 3*YX_WIDTH - 1 : NOC_FLIT_SIZE - PREAMBLE_WIDTH - 4*YX_WIDTH] = remote_x;
+      header[NOC_FLIT_SIZE - PREAMBLE_WIDTH - 4*YX_WIDTH - 1 : NOC_FLIT_SIZE - PREAMBLE_WIDTH - 4*YX_WIDTH - MSG_TYPE_WIDTH] = msg_type;
+      header[NOC_FLIT_SIZE - PREAMBLE_WIDTH - 4*YX_WIDTH - MSG_TYPE_WIDTH - 1 : NOC_FLIT_SIZE - PREAMBLE_WIDTH - 4*YX_WIDTH - MSG_TYPE_WIDTH - RESERVED_WIDTH] = reserved;
     dist_cw  = (remote_x - local_x + XLEN) % XLEN;
     dist_ccw = (local_x - remote_x + XLEN) % XLEN;
     // Determine direction based on local_x and remote_x
@@ -360,8 +369,10 @@ module gen
 	 assign new_flit[i] = output_req[i] & output_ack[i];
 	 assign new_packet[i] = output_data[i][NOC_FLIT_SIZE-1] & new_flit[i];
 	// assign src_next[i] = output_data[i][NOC_FLIT_SIZE - PREAMBLE_WIDTH - 1:NOC_FLIT_SIZE - PREAMBLE_WIDTH - YX_WIDTH] * XLEN +
-	assign src_next[i] =  output_data[i][NOC_FLIT_SIZE - PREAMBLE_WIDTH - 1 : NOC_FLIT_SIZE - PREAMBLE_WIDTH - YX_WIDTH];
-	 always_ff @(posedge clk) begin
+	//assign src_next[i] =  output_data[i][NOC_FLIT_SIZE - PREAMBLE_WIDTH - 1 : NOC_FLIT_SIZE - PREAMBLE_WIDTH - YX_WIDTH];
+	 assign src_next[i] = output_data[i][NOC_FLIT_SIZE - PREAMBLE_WIDTH - 1:NOC_FLIT_SIZE - PREAMBLE_WIDTH - YX_WIDTH] * XLEN
+                          + output_data[i][NOC_FLIT_SIZE - PREAMBLE_WIDTH - YX_WIDTH - 1:NOC_FLIT_SIZE - PREAMBLE_WIDTH - 2*YX_WIDTH];
+	always_ff @(posedge clk) begin
 	    if (rstn == 1'b0 || soft_reset == 1'b1) begin
 	       src_current[i] <= '0;
 	       total_rcv[i] <= '0;

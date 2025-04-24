@@ -378,19 +378,18 @@ package body nocpackage is
     header := (others => '0');
     header(NOC_FLIT_SIZE - 1 downto
            NOC_FLIT_SIZE - PREAMBLE_WIDTH) := PREAMBLE_HEADER;
-    -- header(NOC_FLIT_SIZE - PREAMBLE_WIDTH - 1 downto
-    --       NOC_FLIT_SIZE - PREAMBLE_WIDTH - YX_WIDTH) := "00" & local_y;
     header(NOC_FLIT_SIZE - PREAMBLE_WIDTH - 1 downto
-           NOC_FLIT_SIZE - PREAMBLE_WIDTH - YX_WIDTH) := "00" & local_x;
-    -- header(NOC_FLIT_SIZE - PREAMBLE_WIDTH - 2*YX_WIDTH - 1 downto
-    --       NOC_FLIT_SIZE - PREAMBLE_WIDTH - 3*YX_WIDTH) := "00" & remote_y;
+           NOC_FLIT_SIZE - PREAMBLE_WIDTH - YX_WIDTH) := "00";
     header(NOC_FLIT_SIZE - PREAMBLE_WIDTH - YX_WIDTH - 1 downto
-           NOC_FLIT_SIZE - PREAMBLE_WIDTH - 2*YX_WIDTH) := "00" & remote_x;
+           NOC_FLIT_SIZE - PREAMBLE_WIDTH - 2*YX_WIDTH) := "00" & local_x;
     header(NOC_FLIT_SIZE - PREAMBLE_WIDTH - 2*YX_WIDTH - 1 downto
-           NOC_FLIT_SIZE - PREAMBLE_WIDTH - 2*YX_WIDTH - MSG_TYPE_WIDTH) := msg_type;
-    header(NOC_FLIT_SIZE - PREAMBLE_WIDTH - 2*YX_WIDTH - MSG_TYPE_WIDTH - 1 downto
-           NOC_FLIT_SIZE - PREAMBLE_WIDTH - 2*YX_WIDTH - MSG_TYPE_WIDTH - RESERVED_WIDTH) := reserved;
-
+           NOC_FLIT_SIZE - PREAMBLE_WIDTH - 3*YX_WIDTH) := "00";
+    header(NOC_FLIT_SIZE - PREAMBLE_WIDTH - 3*YX_WIDTH - 1 downto
+           NOC_FLIT_SIZE - PREAMBLE_WIDTH - 4*YX_WIDTH) := "00" & remote_x;
+    header(NOC_FLIT_SIZE - PREAMBLE_WIDTH - 4*YX_WIDTH - 1 downto
+           NOC_FLIT_SIZE - PREAMBLE_WIDTH - 4*YX_WIDTH - MSG_TYPE_WIDTH) := msg_type;
+    header(NOC_FLIT_SIZE - PREAMBLE_WIDTH - 4*YX_WIDTH - MSG_TYPE_WIDTH - 1 downto
+           NOC_FLIT_SIZE - PREAMBLE_WIDTH - 4*YX_WIDTH - MSG_TYPE_WIDTH - RESERVED_WIDTH) := reserved;
     if local_x < remote_x then
       go_right := "01000"; -- go_right := "01000";
     else
