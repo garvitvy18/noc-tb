@@ -1,0 +1,1186 @@
+# vsim tb -c -voptargs="+acc" 
+# Start time: 18:22:44 on May 09,2025
+# //  ModelSim DE 2024.2 May 20 2024 Linux 4.18.0-553.50.1.el8_10.x86_64
+# //
+# // Unpublished work. Copyright 2024 Siemens
+# //
+# // This material contains trade secrets or otherwise confidential information
+# // owned by Siemens Industry Software Inc. or its affiliates (collectively,
+# // "SISW"), or its licensors. Access to and use of this information is strictly
+# // limited as set forth in the Customer's applicable agreements with SISW.
+# //
+# // This material may not be copied, distributed, or otherwise disclosed outside
+# // of the Customer's facilities without the express written permission of SISW,
+# // and may not be used in any way not expressly authorized by SISW.
+# //
+# Loading sv_std.std
+# Loading work.tb
+# Loading work.gen
+# Loading work.uart
+# Loading std.standard
+# Loading std.textio(body)
+# Loading ieee.std_logic_1164(body)
+# Loading ieee.std_logic_arith(body)
+# Loading ieee.std_logic_unsigned(body)
+# Loading work.sldcommon(body)
+# Loading work.nocpackage(body)
+# Loading work.sync_wrap(rtl)
+# Loading work.noc_xy(ring)
+# Loading work.router(behavior)
+# Loading work.noc
+# Loading work.lookahead_router_wrapper
+# Loading work.lookahead_router
+# Loading work.router_fifo
+# Loading work.lookahead_routing
+# Loading work.router_arbiter
+# id_rem:010 , id_loc: 000, local_y: 000, local_x: 000, remote_y: 001, remote_x: 001
+#                50000: Tile           0 - Send 3
+# id_rem:000 , id_loc: 001, local_y: 000, local_x: 001, remote_y: 000, remote_x: 000
+#                50000: Tile           1 - Send 0
+# id_rem:001 , id_loc: 011, local_y: 001, local_x: 000, remote_y: 000, remote_x: 001
+#                50000: Tile           2 - Send 1
+# id_rem:011 , id_loc: 010, local_y: 001, local_x: 001, remote_y: 001, remote_x: 000
+#                50000: Tile           3 - Send 2
+# id_rem:001 , id_loc: 000, local_y: 000, local_x: 000, remote_y: 000, remote_x: 001
+#                50000: Tile           0 - Send 1
+# snd_count ,          0
+# snd_count ,          0
+# snd_count ,          0
+# snd_count ,          0
+# snd_count ,          1
+# snd_count ,          1
+# snd_count ,          1
+# snd_count ,          1
+# snd_count ,          2
+#                62000: Tile           0 - Receiving new packet
+# snd_count ,          2
+#                62000: Tile           1 - Receiving new packet
+# snd_count ,          2
+#                62000: Tile           2 - Receiving new packet
+# snd_count ,          2
+# snd_count ,          3
+# snd_count ,          3
+# snd_count ,          3
+# snd_count ,          3
+# id_rem:000 , id_loc: 010, local_y: 001, local_x: 001, remote_y: 000, remote_x: 000
+#                66000: Tile           3 - Send 0
+# id_rem:010 , id_loc: 011, local_y: 001, local_x: 000, remote_y: 001, remote_x: 001
+#                66000: Tile           2 - Send 3
+# id_rem:000 , id_loc: 001, local_y: 000, local_x: 001, remote_y: 000, remote_x: 000
+#                66000: Tile           1 - Send 0
+# id_rem:001 , id_loc: 000, local_y: 000, local_x: 000, remote_y: 000, remote_x: 001
+#                66000: Tile           0 - Send 1
+# id_rem:011 , id_loc: 000, local_y: 000, local_x: 000, remote_y: 001, remote_x: 000
+#                66000: Tile           0 - Send 2
+# snd_count ,          4
+# snd_count ,          4
+# snd_count ,          4
+# snd_count ,          4
+# snd_count ,          5
+# snd_count ,          5
+# snd_count ,          5
+# snd_count ,          5
+# snd_count ,          6
+#                78000: Tile           0 - Receiving new packet
+# snd_count ,          6
+#                78000: Tile           1 - Receiving new packet
+# snd_count ,          6
+#                78000: Tile           2 - Receiving new packet
+# snd_count ,          6
+#                78000: Tile           3 - Receiving new packet
+# snd_count ,          7
+# snd_count ,          7
+# snd_count ,          7
+# snd_count ,          7
+# id_rem:011 , id_loc: 010, local_y: 001, local_x: 001, remote_y: 001, remote_x: 000
+#                82000: Tile           3 - Send 2
+# id_rem:010 , id_loc: 011, local_y: 001, local_x: 000, remote_y: 001, remote_x: 001
+#                82000: Tile           2 - Send 3
+# id_rem:011 , id_loc: 001, local_y: 000, local_x: 001, remote_y: 001, remote_x: 000
+#                82000: Tile           1 - Send 2
+# id_rem:001 , id_loc: 000, local_y: 000, local_x: 000, remote_y: 000, remote_x: 001
+#                82000: Tile           0 - Send 1
+# id_rem:000 , id_loc: 010, local_y: 001, local_x: 001, remote_y: 000, remote_x: 000
+#                82000: Tile           3 - Send 0
+# id_rem:001 , id_loc: 011, local_y: 001, local_x: 000, remote_y: 000, remote_x: 001
+#                82000: Tile           2 - Send 1
+# id_rem:000 , id_loc: 001, local_y: 000, local_x: 001, remote_y: 000, remote_x: 000
+#                82000: Tile           1 - Send 0
+# id_rem:010 , id_loc: 000, local_y: 000, local_x: 000, remote_y: 001, remote_x: 001
+#                82000: Tile           0 - Send 3
+# snd_count ,          8
+# snd_count ,          8
+# snd_count ,          8
+# snd_count ,          8
+# snd_count ,          9
+# snd_count ,          9
+# snd_count ,          9
+# snd_count ,          9
+# snd_count ,         10
+#                94000: Tile           0 - Receiving new packet
+# snd_count ,         10
+# snd_count ,         10
+# snd_count ,         10
+# snd_count ,         11
+# snd_count ,         11
+# snd_count ,         11
+# snd_count ,         11
+#                98000: Tile           3 - Receiving new packet
+# id_rem:011 , id_loc: 010, local_y: 001, local_x: 001, remote_y: 001, remote_x: 000
+#                98000: Tile           3 - Send 2
+# id_rem:001 , id_loc: 011, local_y: 001, local_x: 000, remote_y: 000, remote_x: 001
+#                98000: Tile           2 - Send 1
+# id_rem:000 , id_loc: 001, local_y: 000, local_x: 001, remote_y: 000, remote_x: 000
+#                98000: Tile           1 - Send 0
+# id_rem:001 , id_loc: 000, local_y: 000, local_x: 000, remote_y: 000, remote_x: 001
+#                98000: Tile           0 - Send 1
+# id_rem:000 , id_loc: 010, local_y: 001, local_x: 001, remote_y: 000, remote_x: 000
+#                98000: Tile           3 - Send 0
+# id_rem:011 , id_loc: 000, local_y: 000, local_x: 000, remote_y: 001, remote_x: 000
+#                98000: Tile           0 - Send 2
+# snd_count ,         12
+# snd_count ,         12
+# snd_count ,         12
+# snd_count ,         12
+# snd_count ,         13
+# snd_count ,         13
+# snd_count ,         13
+# snd_count ,         13
+# snd_count ,         14
+#               110000: Tile           0 - Receiving new packet
+# snd_count ,         14
+# snd_count ,         14
+#               110000: Tile           2 - Receiving new packet
+# snd_count ,         14
+# snd_count ,         15
+# snd_count ,         15
+#               114000: Tile           1 - Receiving new packet
+# snd_count ,         15
+# snd_count ,         15
+# id_rem:001 , id_loc: 010, local_y: 001, local_x: 001, remote_y: 000, remote_x: 001
+#               114000: Tile           3 - Send 1
+# id_rem:000 , id_loc: 011, local_y: 001, local_x: 000, remote_y: 000, remote_x: 000
+#               114000: Tile           2 - Send 0
+# id_rem:010 , id_loc: 001, local_y: 000, local_x: 001, remote_y: 001, remote_x: 001
+#               114000: Tile           1 - Send 3
+# id_rem:001 , id_loc: 000, local_y: 000, local_x: 000, remote_y: 000, remote_x: 001
+#               114000: Tile           0 - Send 1
+# id_rem:000 , id_loc: 010, local_y: 001, local_x: 001, remote_y: 000, remote_x: 000
+#               114000: Tile           3 - Send 0
+# id_rem:010 , id_loc: 011, local_y: 001, local_x: 000, remote_y: 001, remote_x: 001
+#               114000: Tile           2 - Send 3
+# id_rem:000 , id_loc: 001, local_y: 000, local_x: 001, remote_y: 000, remote_x: 000
+#               114000: Tile           1 - Send 0
+# id_rem:010 , id_loc: 000, local_y: 000, local_x: 000, remote_y: 001, remote_x: 001
+#               114000: Tile           0 - Send 3
+# snd_count ,         16
+# snd_count ,         16
+# snd_count ,         16
+# snd_count ,         16
+# snd_count ,         17
+# snd_count ,         17
+# snd_count ,         17
+# snd_count ,         17
+# snd_count ,         18
+#               126000: Tile           0 - Receiving new packet
+# snd_count ,         18
+# snd_count ,         18
+# snd_count ,         18
+# snd_count ,         19
+# snd_count ,         19
+# snd_count ,         19
+# snd_count ,         19
+# id_rem:000 , id_loc: 010, local_y: 001, local_x: 001, remote_y: 000, remote_x: 000
+#               130000: Tile           3 - Send 0
+# id_rem:010 , id_loc: 011, local_y: 001, local_x: 000, remote_y: 001, remote_x: 001
+#               130000: Tile           2 - Send 3
+# id_rem:010 , id_loc: 001, local_y: 000, local_x: 001, remote_y: 001, remote_x: 001
+#               130000: Tile           1 - Send 3
+# id_rem:010 , id_loc: 000, local_y: 000, local_x: 000, remote_y: 001, remote_x: 001
+#               130000: Tile           0 - Send 3
+# id_rem:001 , id_loc: 011, local_y: 001, local_x: 000, remote_y: 000, remote_x: 001
+#               130000: Tile           2 - Send 1
+# id_rem:011 , id_loc: 001, local_y: 000, local_x: 001, remote_y: 001, remote_x: 000
+#               130000: Tile           1 - Send 2
+# id_rem:011 , id_loc: 000, local_y: 000, local_x: 000, remote_y: 001, remote_x: 000
+#               130000: Tile           0 - Send 2
+# snd_count ,         20
+# snd_count ,         20
+# snd_count ,         20
+# snd_count ,         20
+#               134000: Tile           3 - Receiving new packet
+# snd_count ,         21
+# snd_count ,         21
+# snd_count ,         21
+# snd_count ,         21
+# snd_count ,         22
+#               142000: Tile           0 - Receiving new packet
+# snd_count ,         22
+# snd_count ,         22
+# snd_count ,         22
+# snd_count ,         23
+# snd_count ,         23
+#               146000: Tile           1 - Receiving new packet
+# snd_count ,         23
+#               146000: Tile           2 - Receiving new packet
+# snd_count ,         23
+# id_rem:011 , id_loc: 010, local_y: 001, local_x: 001, remote_y: 001, remote_x: 000
+#               146000: Tile           3 - Send 2
+# id_rem:001 , id_loc: 011, local_y: 001, local_x: 000, remote_y: 000, remote_x: 001
+#               146000: Tile           2 - Send 1
+# id_rem:010 , id_loc: 001, local_y: 000, local_x: 001, remote_y: 001, remote_x: 001
+#               146000: Tile           1 - Send 3
+# id_rem:001 , id_loc: 000, local_y: 000, local_x: 000, remote_y: 000, remote_x: 001
+#               146000: Tile           0 - Send 1
+# id_rem:000 , id_loc: 010, local_y: 001, local_x: 001, remote_y: 000, remote_x: 000
+#               146000: Tile           3 - Send 0
+# id_rem:000 , id_loc: 011, local_y: 001, local_x: 000, remote_y: 000, remote_x: 000
+#               146000: Tile           2 - Send 0
+# id_rem:011 , id_loc: 001, local_y: 000, local_x: 001, remote_y: 001, remote_x: 000
+#               146000: Tile           1 - Send 2
+# id_rem:010 , id_loc: 000, local_y: 000, local_x: 000, remote_y: 001, remote_x: 001
+#               146000: Tile           0 - Send 3
+# snd_count ,         24
+# snd_count ,         24
+# snd_count ,         24
+# snd_count ,         24
+#               150000: Tile           3 - Receiving new packet
+# snd_count ,         25
+# snd_count ,         25
+# snd_count ,         25
+# snd_count ,         25
+# snd_count ,         26
+#               158000: Tile           0 - Receiving new packet
+# snd_count ,         26
+# snd_count ,         26
+# snd_count ,         26
+# snd_count ,         27
+# snd_count ,         27
+# snd_count ,         27
+# snd_count ,         27
+# id_rem:000 , id_loc: 010, local_y: 001, local_x: 001, remote_y: 000, remote_x: 000
+#               162000: Tile           3 - Send 0
+# id_rem:010 , id_loc: 011, local_y: 001, local_x: 000, remote_y: 001, remote_x: 001
+#               162000: Tile           2 - Send 3
+# id_rem:011 , id_loc: 001, local_y: 000, local_x: 001, remote_y: 001, remote_x: 000
+#               162000: Tile           1 - Send 2
+# id_rem:010 , id_loc: 000, local_y: 000, local_x: 000, remote_y: 001, remote_x: 001
+#               162000: Tile           0 - Send 3
+# id_rem:001 , id_loc: 000, local_y: 000, local_x: 000, remote_y: 000, remote_x: 001
+#               162000: Tile           0 - Send 1
+# snd_count ,         28
+# snd_count ,         28
+# snd_count ,         28
+# snd_count ,         28
+# snd_count ,         29
+# snd_count ,         29
+# snd_count ,         29
+# snd_count ,         29
+#               170000: Tile           3 - Receiving new packet
+# snd_count ,         30
+#               174000: Tile           0 - Receiving new packet
+# snd_count ,         30
+# snd_count ,         30
+# snd_count ,         30
+# snd_count ,         31
+# snd_count ,         31
+#               178000: Tile           1 - Receiving new packet
+# snd_count ,         31
+# snd_count ,         31
+# id_rem:011 , id_loc: 010, local_y: 001, local_x: 001, remote_y: 001, remote_x: 000
+#               178000: Tile           3 - Send 2
+# id_rem:010 , id_loc: 011, local_y: 001, local_x: 000, remote_y: 001, remote_x: 001
+#               178000: Tile           2 - Send 3
+# id_rem:011 , id_loc: 001, local_y: 000, local_x: 001, remote_y: 001, remote_x: 000
+#               178000: Tile           1 - Send 2
+# id_rem:001 , id_loc: 000, local_y: 000, local_x: 000, remote_y: 000, remote_x: 001
+#               178000: Tile           0 - Send 1
+# id_rem:001 , id_loc: 010, local_y: 001, local_x: 001, remote_y: 000, remote_x: 001
+#               178000: Tile           3 - Send 1
+# id_rem:001 , id_loc: 011, local_y: 001, local_x: 000, remote_y: 000, remote_x: 001
+#               178000: Tile           2 - Send 1
+# id_rem:011 , id_loc: 000, local_y: 000, local_x: 000, remote_y: 001, remote_x: 000
+#               178000: Tile           0 - Send 2
+# snd_count ,         32
+# snd_count ,         32
+# snd_count ,         32
+# snd_count ,         32
+# snd_count ,         33
+# snd_count ,         33
+# snd_count ,         33
+# snd_count ,         33
+# snd_count ,         34
+#               190000: Tile           0 - Receiving new packet
+# snd_count ,         34
+# snd_count ,         34
+# snd_count ,         34
+# snd_count ,         35
+# snd_count ,         35
+#               194000: Tile           1 - Receiving new packet
+# snd_count ,         35
+# snd_count ,         35
+# id_rem:000 , id_loc: 010, local_y: 001, local_x: 001, remote_y: 000, remote_x: 000
+#               194000: Tile           3 - Send 0
+# id_rem:010 , id_loc: 011, local_y: 001, local_x: 000, remote_y: 001, remote_x: 001
+#               194000: Tile           2 - Send 3
+# id_rem:011 , id_loc: 001, local_y: 000, local_x: 001, remote_y: 001, remote_x: 000
+#               194000: Tile           1 - Send 2
+# id_rem:011 , id_loc: 000, local_y: 000, local_x: 000, remote_y: 001, remote_x: 000
+#               194000: Tile           0 - Send 2
+# id_rem:000 , id_loc: 011, local_y: 001, local_x: 000, remote_y: 000, remote_x: 000
+#               194000: Tile           2 - Send 0
+# id_rem:001 , id_loc: 000, local_y: 000, local_x: 000, remote_y: 000, remote_x: 001
+#               194000: Tile           0 - Send 1
+# snd_count ,         36
+# snd_count ,         36
+# snd_count ,         36
+# snd_count ,         36
+# snd_count ,         37
+# snd_count ,         37
+# snd_count ,         37
+# snd_count ,         37
+# snd_count ,         38
+#               206000: Tile           0 - Receiving new packet
+# snd_count ,         38
+# snd_count ,         38
+# snd_count ,         38
+# snd_count ,         39
+# snd_count ,         39
+# snd_count ,         39
+#               210000: Tile           2 - Receiving new packet
+# snd_count ,         39
+#               210000: Tile           3 - Receiving new packet
+# id_rem:001 , id_loc: 010, local_y: 001, local_x: 001, remote_y: 000, remote_x: 001
+#               210000: Tile           3 - Send 1
+# id_rem:001 , id_loc: 011, local_y: 001, local_x: 000, remote_y: 000, remote_x: 001
+#               210000: Tile           2 - Send 1
+# id_rem:000 , id_loc: 001, local_y: 000, local_x: 001, remote_y: 000, remote_x: 000
+#               210000: Tile           1 - Send 0
+# id_rem:010 , id_loc: 000, local_y: 000, local_x: 000, remote_y: 001, remote_x: 001
+#               210000: Tile           0 - Send 3
+# id_rem:000 , id_loc: 010, local_y: 001, local_x: 001, remote_y: 000, remote_x: 000
+#               210000: Tile           3 - Send 0
+# id_rem:010 , id_loc: 011, local_y: 001, local_x: 000, remote_y: 001, remote_x: 001
+#               210000: Tile           2 - Send 3
+# id_rem:001 , id_loc: 000, local_y: 000, local_x: 000, remote_y: 000, remote_x: 001
+#               210000: Tile           0 - Send 1
+# snd_count ,         40
+# snd_count ,         40
+# snd_count ,         40
+# snd_count ,         40
+# snd_count ,         41
+# snd_count ,         41
+# snd_count ,         41
+# snd_count ,         41
+# snd_count ,         42
+#               222000: Tile           0 - Receiving new packet
+# snd_count ,         42
+# snd_count ,         42
+# snd_count ,         42
+# snd_count ,         43
+# snd_count ,         43
+#               226000: Tile           1 - Receiving new packet
+# snd_count ,         43
+#               226000: Tile           2 - Receiving new packet
+# snd_count ,         43
+# id_rem:001 , id_loc: 010, local_y: 001, local_x: 001, remote_y: 000, remote_x: 001
+#               226000: Tile           3 - Send 1
+# id_rem:010 , id_loc: 011, local_y: 001, local_x: 000, remote_y: 001, remote_x: 001
+#               226000: Tile           2 - Send 3
+# id_rem:000 , id_loc: 001, local_y: 000, local_x: 001, remote_y: 000, remote_x: 000
+#               226000: Tile           1 - Send 0
+# id_rem:001 , id_loc: 000, local_y: 000, local_x: 000, remote_y: 000, remote_x: 001
+#               226000: Tile           0 - Send 1
+# id_rem:000 , id_loc: 010, local_y: 001, local_x: 001, remote_y: 000, remote_x: 000
+#               226000: Tile           3 - Send 0
+# id_rem:001 , id_loc: 011, local_y: 001, local_x: 000, remote_y: 000, remote_x: 001
+#               226000: Tile           2 - Send 1
+# id_rem:011 , id_loc: 000, local_y: 000, local_x: 000, remote_y: 001, remote_x: 000
+#               226000: Tile           0 - Send 2
+# snd_count ,         44
+# snd_count ,         44
+# snd_count ,         44
+# snd_count ,         44
+# snd_count ,         45
+# snd_count ,         45
+# snd_count ,         45
+# snd_count ,         45
+# snd_count ,         46
+# snd_count ,         46
+# snd_count ,         46
+# snd_count ,         46
+# snd_count ,         47
+# snd_count ,         47
+#               242000: Tile           1 - Receiving new packet
+# snd_count ,         47
+# snd_count ,         47
+# id_rem:001 , id_loc: 010, local_y: 001, local_x: 001, remote_y: 000, remote_x: 001
+#               242000: Tile           3 - Send 1
+# id_rem:010 , id_loc: 011, local_y: 001, local_x: 000, remote_y: 001, remote_x: 001
+#               242000: Tile           2 - Send 3
+# id_rem:011 , id_loc: 001, local_y: 000, local_x: 001, remote_y: 001, remote_x: 000
+#               242000: Tile           1 - Send 2
+# id_rem:010 , id_loc: 000, local_y: 000, local_x: 000, remote_y: 001, remote_x: 001
+#               242000: Tile           0 - Send 3
+# id_rem:000 , id_loc: 010, local_y: 001, local_x: 001, remote_y: 000, remote_x: 000
+#               242000: Tile           3 - Send 0
+# id_rem:001 , id_loc: 000, local_y: 000, local_x: 000, remote_y: 000, remote_x: 001
+#               242000: Tile           0 - Send 1
+# snd_count ,         48
+#               246000: Tile           0 - Receiving new packet
+# snd_count ,         48
+# snd_count ,         48
+# snd_count ,         48
+# snd_count ,         49
+# snd_count ,         49
+# snd_count ,         49
+# snd_count ,         49
+# snd_count ,         50
+# snd_count ,         50
+# snd_count ,         50
+# snd_count ,         50
+# snd_count ,         51
+# snd_count ,         51
+#               258000: Tile           1 - Receiving new packet
+# snd_count ,         51
+# snd_count ,         51
+#               258000: Tile           3 - Receiving new packet
+# id_rem:000 , id_loc: 010, local_y: 001, local_x: 001, remote_y: 000, remote_x: 000
+#               258000: Tile           3 - Send 0
+# id_rem:000 , id_loc: 011, local_y: 001, local_x: 000, remote_y: 000, remote_x: 000
+#               258000: Tile           2 - Send 0
+# id_rem:011 , id_loc: 001, local_y: 000, local_x: 001, remote_y: 001, remote_x: 000
+#               258000: Tile           1 - Send 2
+# id_rem:001 , id_loc: 000, local_y: 000, local_x: 000, remote_y: 000, remote_x: 001
+#               258000: Tile           0 - Send 1
+# snd_count ,         52
+#               262000: Tile           0 - Receiving new packet
+# snd_count ,         52
+# snd_count ,         52
+# snd_count ,         52
+# snd_count ,         53
+# snd_count ,         53
+# snd_count ,         53
+# snd_count ,         53
+# snd_count ,         54
+# snd_count ,         54
+# snd_count ,         54
+#               270000: Tile           2 - Receiving new packet
+# snd_count ,         54
+# snd_count ,         55
+# snd_count ,         55
+#               274000: Tile           1 - Receiving new packet
+# snd_count ,         55
+# snd_count ,         55
+# id_rem:000 , id_loc: 010, local_y: 001, local_x: 001, remote_y: 000, remote_x: 000
+#               274000: Tile           3 - Send 0
+# id_rem:010 , id_loc: 011, local_y: 001, local_x: 000, remote_y: 001, remote_x: 001
+#               274000: Tile           2 - Send 3
+# id_rem:011 , id_loc: 001, local_y: 000, local_x: 001, remote_y: 001, remote_x: 000
+#               274000: Tile           1 - Send 2
+# id_rem:010 , id_loc: 000, local_y: 000, local_x: 000, remote_y: 001, remote_x: 001
+#               274000: Tile           0 - Send 3
+# id_rem:001 , id_loc: 000, local_y: 000, local_x: 000, remote_y: 000, remote_x: 001
+#               274000: Tile           0 - Send 1
+# snd_count ,         56
+#               278000: Tile           0 - Receiving new packet
+# snd_count ,         56
+# snd_count ,         56
+# snd_count ,         57
+# snd_count ,         57
+# snd_count ,         57
+# id_rem:000 , id_loc: 010, local_y: 001, local_x: 001, remote_y: 000, remote_x: 000
+#               282000: Tile           3 - Send 0
+# snd_count ,         58
+# snd_count ,         58
+# snd_count ,         58
+#               286000: Tile           2 - Receiving new packet
+# snd_count ,         56
+# snd_count ,         59
+# snd_count ,         59
+#               290000: Tile           1 - Receiving new packet
+# snd_count ,         59
+# snd_count ,         57
+#               290000: Tile           3 - Receiving new packet
+# id_rem:001 , id_loc: 011, local_y: 001, local_x: 000, remote_y: 000, remote_x: 001
+#               290000: Tile           2 - Send 1
+# id_rem:000 , id_loc: 001, local_y: 000, local_x: 001, remote_y: 000, remote_x: 000
+#               290000: Tile           1 - Send 0
+# id_rem:010 , id_loc: 000, local_y: 000, local_x: 000, remote_y: 001, remote_x: 001
+#               290000: Tile           0 - Send 3
+# id_rem:010 , id_loc: 011, local_y: 001, local_x: 000, remote_y: 001, remote_x: 001
+#               290000: Tile           2 - Send 3
+# id_rem:011 , id_loc: 001, local_y: 000, local_x: 001, remote_y: 001, remote_x: 000
+#               290000: Tile           1 - Send 2
+# id_rem:001 , id_loc: 000, local_y: 000, local_x: 000, remote_y: 000, remote_x: 001
+#               290000: Tile           0 - Send 1
+# snd_count ,         60
+#               294000: Tile           0 - Receiving new packet
+# snd_count ,         60
+# snd_count ,         60
+# snd_count ,         58
+# snd_count ,         61
+# snd_count ,         61
+# snd_count ,         61
+# snd_count ,         59
+# id_rem:001 , id_loc: 010, local_y: 001, local_x: 001, remote_y: 000, remote_x: 001
+#               298000: Tile           3 - Send 1
+# snd_count ,         62
+# snd_count ,         62
+# snd_count ,         62
+#               302000: Tile           2 - Receiving new packet
+# snd_count ,         63
+# snd_count ,         63
+#               306000: Tile           1 - Receiving new packet
+# snd_count ,         63
+# id_rem:010 , id_loc: 011, local_y: 001, local_x: 000, remote_y: 001, remote_x: 001
+#               306000: Tile           2 - Send 3
+# id_rem:011 , id_loc: 001, local_y: 000, local_x: 001, remote_y: 001, remote_x: 000
+#               306000: Tile           1 - Send 2
+# id_rem:001 , id_loc: 000, local_y: 000, local_x: 000, remote_y: 000, remote_x: 001
+#               306000: Tile           0 - Send 1
+# id_rem:000 , id_loc: 001, local_y: 000, local_x: 001, remote_y: 000, remote_x: 000
+#               306000: Tile           1 - Send 0
+# snd_count ,         64
+# snd_count ,         64
+# snd_count ,         64
+# snd_count ,         65
+# snd_count ,         65
+# snd_count ,         65
+# id_rem:000 , id_loc: 010, local_y: 001, local_x: 001, remote_y: 000, remote_x: 000
+#               314000: Tile           3 - Send 0
+# snd_count ,         66
+# snd_count ,         66
+# snd_count ,         66
+# snd_count ,         60
+# snd_count ,         67
+# snd_count ,         67
+#               322000: Tile           1 - Receiving new packet
+# snd_count ,         67
+# snd_count ,         61
+#               322000: Tile           3 - Receiving new packet
+# id_rem:010 , id_loc: 011, local_y: 001, local_x: 000, remote_y: 001, remote_x: 001
+#               322000: Tile           2 - Send 3
+# id_rem:011 , id_loc: 001, local_y: 000, local_x: 001, remote_y: 001, remote_x: 000
+#               322000: Tile           1 - Send 2
+# id_rem:001 , id_loc: 000, local_y: 000, local_x: 000, remote_y: 000, remote_x: 001
+#               322000: Tile           0 - Send 1
+# id_rem:010 , id_loc: 000, local_y: 000, local_x: 000, remote_y: 001, remote_x: 001
+#               322000: Tile           0 - Send 3
+# snd_count ,         68
+# snd_count ,         68
+# snd_count ,         68
+# snd_count ,         62
+# snd_count ,         69
+# snd_count ,         69
+# snd_count ,         69
+# snd_count ,         63
+# id_rem:011 , id_loc: 010, local_y: 001, local_x: 001, remote_y: 001, remote_x: 000
+#               330000: Tile           3 - Send 2
+# snd_count ,         70
+#               334000: Tile           0 - Receiving new packet
+# snd_count ,         70
+# snd_count ,         70
+#               334000: Tile           2 - Receiving new packet
+# snd_count ,         71
+# snd_count ,         71
+#               338000: Tile           1 - Receiving new packet
+# snd_count ,         71
+#               338000: Tile           3 - Receiving new packet
+# id_rem:010 , id_loc: 011, local_y: 001, local_x: 000, remote_y: 001, remote_x: 001
+#               338000: Tile           2 - Send 3
+# id_rem:011 , id_loc: 001, local_y: 000, local_x: 001, remote_y: 001, remote_x: 000
+#               338000: Tile           1 - Send 2
+# id_rem:010 , id_loc: 000, local_y: 000, local_x: 000, remote_y: 001, remote_x: 001
+#               338000: Tile           0 - Send 3
+# id_rem:001 , id_loc: 011, local_y: 001, local_x: 000, remote_y: 000, remote_x: 001
+#               338000: Tile           2 - Send 1
+# id_rem:001 , id_loc: 000, local_y: 000, local_x: 000, remote_y: 000, remote_x: 001
+#               338000: Tile           0 - Send 1
+# snd_count ,         72
+# snd_count ,         72
+# snd_count ,         72
+# snd_count ,         73
+# snd_count ,         73
+# snd_count ,         73
+# id_rem:001 , id_loc: 010, local_y: 001, local_x: 001, remote_y: 000, remote_x: 001
+#               346000: Tile           3 - Send 1
+# snd_count ,         74
+#               350000: Tile           0 - Receiving new packet
+# snd_count ,         74
+# snd_count ,         74
+# snd_count ,         64
+# snd_count ,         75
+# snd_count ,         75
+#               354000: Tile           1 - Receiving new packet
+# snd_count ,         75
+# snd_count ,         65
+#               354000: Tile           3 - Receiving new packet
+# id_rem:010 , id_loc: 011, local_y: 001, local_x: 000, remote_y: 001, remote_x: 001
+#               354000: Tile           2 - Send 3
+# id_rem:011 , id_loc: 001, local_y: 000, local_x: 001, remote_y: 001, remote_x: 000
+#               354000: Tile           1 - Send 2
+# id_rem:011 , id_loc: 000, local_y: 000, local_x: 000, remote_y: 001, remote_x: 000
+#               354000: Tile           0 - Send 2
+# id_rem:010 , id_loc: 001, local_y: 000, local_x: 001, remote_y: 001, remote_x: 001
+#               354000: Tile           1 - Send 3
+# id_rem:001 , id_loc: 000, local_y: 000, local_x: 000, remote_y: 000, remote_x: 001
+#               354000: Tile           0 - Send 1
+# snd_count ,         76
+# snd_count ,         76
+# snd_count ,         76
+# snd_count ,         66
+# snd_count ,         77
+# snd_count ,         77
+# snd_count ,         77
+# snd_count ,         67
+# id_rem:000 , id_loc: 010, local_y: 001, local_x: 001, remote_y: 000, remote_x: 000
+#               362000: Tile           3 - Send 0
+# snd_count ,         78
+#               366000: Tile           0 - Receiving new packet
+# snd_count ,         78
+# snd_count ,         78
+#               366000: Tile           2 - Receiving new packet
+# snd_count ,         79
+# snd_count ,         79
+#               370000: Tile           1 - Receiving new packet
+# snd_count ,         79
+#               370000: Tile           3 - Receiving new packet
+# id_rem:001 , id_loc: 011, local_y: 001, local_x: 000, remote_y: 000, remote_x: 001
+#               370000: Tile           2 - Send 1
+# id_rem:011 , id_loc: 001, local_y: 000, local_x: 001, remote_y: 001, remote_x: 000
+#               370000: Tile           1 - Send 2
+# id_rem:010 , id_loc: 000, local_y: 000, local_x: 000, remote_y: 001, remote_x: 001
+#               370000: Tile           0 - Send 3
+# id_rem:001 , id_loc: 000, local_y: 000, local_x: 000, remote_y: 000, remote_x: 001
+#               370000: Tile           0 - Send 1
+# snd_count ,         80
+# snd_count ,         80
+# snd_count ,         80
+# snd_count ,         81
+# snd_count ,         81
+# snd_count ,         81
+# id_rem:000 , id_loc: 010, local_y: 001, local_x: 001, remote_y: 000, remote_x: 000
+#               378000: Tile           3 - Send 0
+# snd_count ,         82
+#               382000: Tile           0 - Receiving new packet
+# snd_count ,         82
+# snd_count ,         82
+# snd_count ,         68
+# snd_count ,         83
+# snd_count ,         83
+# snd_count ,         83
+# id_rem:010 , id_loc: 011, local_y: 001, local_x: 000, remote_y: 001, remote_x: 001
+#               386000: Tile           2 - Send 3
+# id_rem:010 , id_loc: 001, local_y: 000, local_x: 001, remote_y: 001, remote_x: 001
+#               386000: Tile           1 - Send 3
+# id_rem:010 , id_loc: 000, local_y: 000, local_x: 000, remote_y: 001, remote_x: 001
+#               386000: Tile           0 - Send 3
+# id_rem:000 , id_loc: 011, local_y: 001, local_x: 000, remote_y: 000, remote_x: 000
+#               386000: Tile           2 - Send 0
+# id_rem:011 , id_loc: 001, local_y: 000, local_x: 001, remote_y: 001, remote_x: 000
+#               386000: Tile           1 - Send 2
+# id_rem:011 , id_loc: 000, local_y: 000, local_x: 000, remote_y: 001, remote_x: 000
+#               386000: Tile           0 - Send 2
+# snd_count ,         84
+# snd_count ,         84
+# snd_count ,         84
+# snd_count ,         85
+# snd_count ,         85
+# snd_count ,         85
+# snd_count ,         86
+#               398000: Tile           0 - Receiving new packet
+# snd_count ,         86
+# snd_count ,         86
+# snd_count ,         87
+# snd_count ,         87
+# snd_count ,         87
+# snd_count ,         69
+#               402000: Tile           3 - Receiving new packet
+# id_rem:010 , id_loc: 011, local_y: 001, local_x: 000, remote_y: 001, remote_x: 001
+#               402000: Tile           2 - Send 3
+# id_rem:011 , id_loc: 001, local_y: 000, local_x: 001, remote_y: 001, remote_x: 000
+#               402000: Tile           1 - Send 2
+# id_rem:001 , id_loc: 000, local_y: 000, local_x: 000, remote_y: 000, remote_x: 001
+#               402000: Tile           0 - Send 1
+# snd_count ,         88
+# snd_count ,         88
+# snd_count ,         88
+# snd_count ,         70
+# snd_count ,         89
+# snd_count ,         89
+# snd_count ,         89
+# snd_count ,         71
+# id_rem:011 , id_loc: 010, local_y: 001, local_x: 001, remote_y: 001, remote_x: 000
+#               410000: Tile           3 - Send 2
+# snd_count ,         90
+# snd_count ,         90
+# snd_count ,         90
+#               414000: Tile           2 - Receiving new packet
+# snd_count ,         91
+# snd_count ,         91
+# snd_count ,         91
+# id_rem:001 , id_loc: 011, local_y: 001, local_x: 000, remote_y: 000, remote_x: 001
+#               418000: Tile           2 - Send 1
+# id_rem:000 , id_loc: 001, local_y: 000, local_x: 001, remote_y: 000, remote_x: 000
+#               418000: Tile           1 - Send 0
+# id_rem:011 , id_loc: 000, local_y: 000, local_x: 000, remote_y: 001, remote_x: 000
+#               418000: Tile           0 - Send 2
+# id_rem:010 , id_loc: 011, local_y: 001, local_x: 000, remote_y: 001, remote_x: 001
+#               418000: Tile           2 - Send 3
+# snd_count ,         92
+# snd_count ,         93
+# id_rem:011 , id_loc: 010, local_y: 001, local_x: 001, remote_y: 001, remote_x: 000
+#               426000: Tile           3 - Send 2
+# id_rem:011 , id_loc: 001, local_y: 000, local_x: 001, remote_y: 001, remote_x: 000
+#               426000: Tile           1 - Send 2
+# id_rem:001 , id_loc: 000, local_y: 000, local_x: 000, remote_y: 000, remote_x: 001
+#               426000: Tile           0 - Send 1
+# snd_count ,         92
+#               430000: Tile           0 - Receiving new packet
+# snd_count ,         92
+#               430000: Tile           1 - Receiving new packet
+# snd_count ,         94
+# snd_count ,         72
+# snd_count ,         93
+# snd_count ,         95
+# snd_count ,         73
+# id_rem:001 , id_loc: 011, local_y: 001, local_x: 000, remote_y: 000, remote_x: 001
+#               434000: Tile           2 - Send 1
+# id_rem:010 , id_loc: 011, local_y: 001, local_x: 000, remote_y: 001, remote_x: 001
+#               434000: Tile           2 - Send 3
+# snd_count ,         94
+# snd_count ,         96
+# snd_count ,         74
+# snd_count ,         95
+# snd_count ,         97
+# snd_count ,         75
+# id_rem:011 , id_loc: 010, local_y: 001, local_x: 001, remote_y: 001, remote_x: 000
+#               442000: Tile           3 - Send 2
+# id_rem:010 , id_loc: 000, local_y: 000, local_x: 000, remote_y: 001, remote_x: 001
+#               442000: Tile           0 - Send 3
+#               446000: Tile           1 - Receiving new packet
+# snd_count ,         98
+#               446000: Tile           2 - Receiving new packet
+# snd_count ,         93
+# snd_count ,         99
+# id_rem:010 , id_loc: 011, local_y: 001, local_x: 000, remote_y: 001, remote_x: 001
+#               450000: Tile           2 - Send 3
+# id_rem:001 , id_loc: 011, local_y: 001, local_x: 000, remote_y: 000, remote_x: 001
+#               450000: Tile           2 - Send 1
+# snd_count ,         94
+# snd_count ,        100
+# snd_count ,         95
+# snd_count ,        101
+# id_rem:011 , id_loc: 001, local_y: 000, local_x: 001, remote_y: 001, remote_x: 000
+#               458000: Tile           1 - Send 2
+# id_rem:010 , id_loc: 001, local_y: 000, local_x: 001, remote_y: 001, remote_x: 001
+#               458000: Tile           1 - Send 3
+# id_rem:001 , id_loc: 010, local_y: 001, local_x: 001, remote_y: 000, remote_x: 001
+#               458000: Tile           3 - Send 1
+# id_rem:001 , id_loc: 000, local_y: 000, local_x: 000, remote_y: 000, remote_x: 001
+#               458000: Tile           0 - Send 1
+# snd_count ,         96
+#               462000: Tile           0 - Receiving new packet
+# snd_count ,         96
+#               462000: Tile           1 - Receiving new packet
+# snd_count ,        102
+# snd_count ,         76
+# snd_count ,         97
+# snd_count ,        103
+# snd_count ,         77
+#               466000: Tile           3 - Receiving new packet
+# id_rem:010 , id_loc: 011, local_y: 001, local_x: 000, remote_y: 001, remote_x: 001
+#               466000: Tile           2 - Send 3
+# id_rem:000 , id_loc: 011, local_y: 001, local_x: 000, remote_y: 000, remote_x: 000
+#               466000: Tile           2 - Send 0
+# snd_count ,         98
+# snd_count ,        104
+# snd_count ,         78
+# snd_count ,         99
+# snd_count ,        105
+# snd_count ,         79
+# id_rem:000 , id_loc: 010, local_y: 001, local_x: 001, remote_y: 000, remote_x: 000
+#               474000: Tile           3 - Send 0
+# id_rem:001 , id_loc: 000, local_y: 000, local_x: 000, remote_y: 000, remote_x: 001
+#               474000: Tile           0 - Send 1
+# id_rem:001 , id_loc: 010, local_y: 001, local_x: 001, remote_y: 000, remote_x: 001
+#               474000: Tile           3 - Send 1
+# id_rem:010 , id_loc: 000, local_y: 000, local_x: 000, remote_y: 001, remote_x: 001
+#               474000: Tile           0 - Send 3
+# snd_count ,        100
+#               478000: Tile           0 - Receiving new packet
+#               478000: Tile           1 - Receiving new packet
+# snd_count ,        106
+#               478000: Tile           2 - Receiving new packet
+# snd_count ,         80
+# snd_count ,        101
+# snd_count ,         97
+# snd_count ,        107
+# snd_count ,         81
+#               482000: Tile           3 - Receiving new packet
+# id_rem:010 , id_loc: 011, local_y: 001, local_x: 000, remote_y: 001, remote_x: 001
+#               482000: Tile           2 - Send 3
+# snd_count ,        102
+# snd_count ,         98
+# snd_count ,        108
+# snd_count ,         82
+# snd_count ,        103
+# snd_count ,         99
+# snd_count ,        109
+# snd_count ,         83
+# id_rem:000 , id_loc: 010, local_y: 001, local_x: 001, remote_y: 000, remote_x: 000
+#               490000: Tile           3 - Send 0
+# id_rem:000 , id_loc: 001, local_y: 000, local_x: 001, remote_y: 000, remote_x: 000
+#               490000: Tile           1 - Send 0
+# id_rem:001 , id_loc: 000, local_y: 000, local_x: 000, remote_y: 000, remote_x: 001
+#               490000: Tile           0 - Send 1
+# id_rem:011 , id_loc: 001, local_y: 000, local_x: 001, remote_y: 001, remote_x: 000
+#               490000: Tile           1 - Send 2
+# snd_count ,        104
+#               494000: Tile           0 - Receiving new packet
+# snd_count ,        100
+#               494000: Tile           1 - Receiving new packet
+# snd_count ,        110
+#               494000: Tile           2 - Receiving new packet
+# snd_count ,         84
+# snd_count ,        105
+# snd_count ,        111
+# snd_count ,         85
+#               498000: Tile           3 - Receiving new packet
+# id_rem:010 , id_loc: 011, local_y: 001, local_x: 000, remote_y: 001, remote_x: 001
+#               498000: Tile           2 - Send 3
+# id_rem:001 , id_loc: 011, local_y: 001, local_x: 000, remote_y: 000, remote_x: 001
+#               498000: Tile           2 - Send 1
+# snd_count ,        106
+# snd_count ,        112
+# snd_count ,         86
+# snd_count ,        107
+# snd_count ,        113
+# snd_count ,         87
+# id_rem:000 , id_loc: 010, local_y: 001, local_x: 001, remote_y: 000, remote_x: 000
+#               506000: Tile           3 - Send 0
+# id_rem:001 , id_loc: 000, local_y: 000, local_x: 000, remote_y: 000, remote_x: 001
+#               506000: Tile           0 - Send 1
+# id_rem:011 , id_loc: 000, local_y: 000, local_x: 000, remote_y: 001, remote_x: 000
+#               506000: Tile           0 - Send 2
+# snd_count ,        108
+#               510000: Tile           0 - Receiving new packet
+#               510000: Tile           1 - Receiving new packet
+# snd_count ,        114
+#               510000: Tile           2 - Receiving new packet
+# snd_count ,        109
+# snd_count ,        101
+# snd_count ,        115
+# id_rem:010 , id_loc: 011, local_y: 001, local_x: 000, remote_y: 001, remote_x: 001
+#               514000: Tile           2 - Send 3
+# snd_count ,        110
+# snd_count ,        102
+# snd_count ,        116
+# snd_count ,        111
+# snd_count ,        103
+# snd_count ,        117
+# id_rem:011 , id_loc: 001, local_y: 000, local_x: 001, remote_y: 001, remote_x: 000
+#               522000: Tile           1 - Send 2
+# id_rem:011 , id_loc: 000, local_y: 000, local_x: 000, remote_y: 001, remote_x: 000
+#               522000: Tile           0 - Send 2
+# id_rem:000 , id_loc: 010, local_y: 001, local_x: 001, remote_y: 000, remote_x: 000
+#               522000: Tile           3 - Send 0
+# snd_count ,        104
+#               526000: Tile           1 - Receiving new packet
+# snd_count ,        118
+# snd_count ,         88
+#               526000: Tile           3 - Receiving new packet
+# snd_count ,        105
+# snd_count ,        119
+# snd_count ,         89
+# id_rem:010 , id_loc: 011, local_y: 001, local_x: 000, remote_y: 001, remote_x: 001
+#               530000: Tile           2 - Send 3
+# snd_count ,        106
+# snd_count ,         90
+# snd_count ,        107
+# snd_count ,         91
+# id_rem:000 , id_loc: 010, local_y: 001, local_x: 001, remote_y: 000, remote_x: 000
+#               538000: Tile           3 - Send 0
+# id_rem:010 , id_loc: 001, local_y: 000, local_x: 001, remote_y: 001, remote_x: 001
+#               538000: Tile           1 - Send 3
+# id_rem:011 , id_loc: 010, local_y: 001, local_x: 001, remote_y: 001, remote_x: 000
+#               538000: Tile           3 - Send 2
+# id_rem:000 , id_loc: 001, local_y: 000, local_x: 001, remote_y: 000, remote_x: 000
+#               538000: Tile           1 - Send 0
+# id_rem:001 , id_loc: 011, local_y: 001, local_x: 000, remote_y: 000, remote_x: 001
+#               538000: Tile           2 - Send 1
+# id_rem:010 , id_loc: 000, local_y: 000, local_x: 000, remote_y: 001, remote_x: 001
+#               538000: Tile           0 - Send 3
+# snd_count ,        112
+#               542000: Tile           0 - Receiving new packet
+# snd_count ,        108
+#               542000: Tile           1 - Receiving new packet
+# snd_count ,        120
+#               542000: Tile           2 - Receiving new packet
+# snd_count ,         92
+#               542000: Tile           3 - Receiving new packet
+# snd_count ,        113
+# snd_count ,        109
+# snd_count ,        121
+# snd_count ,         93
+# snd_count ,        114
+# snd_count ,        110
+# snd_count ,        122
+# snd_count ,         94
+# snd_count ,        115
+# snd_count ,        111
+# snd_count ,        123
+# snd_count ,         95
+# id_rem:001 , id_loc: 010, local_y: 001, local_x: 001, remote_y: 000, remote_x: 001
+#               554000: Tile           3 - Send 1
+# id_rem:001 , id_loc: 011, local_y: 001, local_x: 000, remote_y: 000, remote_x: 001
+#               554000: Tile           2 - Send 1
+# id_rem:010 , id_loc: 001, local_y: 000, local_x: 001, remote_y: 001, remote_x: 001
+#               554000: Tile           1 - Send 3
+# id_rem:011 , id_loc: 000, local_y: 000, local_x: 000, remote_y: 001, remote_x: 000
+#               554000: Tile           0 - Send 2
+# id_rem:000 , id_loc: 010, local_y: 001, local_x: 001, remote_y: 000, remote_x: 000
+#               554000: Tile           3 - Send 0
+# id_rem:011 , id_loc: 001, local_y: 000, local_x: 001, remote_y: 001, remote_x: 000
+#               554000: Tile           1 - Send 2
+# id_rem:001 , id_loc: 000, local_y: 000, local_x: 000, remote_y: 000, remote_x: 001
+#               554000: Tile           0 - Send 1
+# snd_count ,        116
+#               558000: Tile           0 - Receiving new packet
+# snd_count ,        112
+#               558000: Tile           1 - Receiving new packet
+# snd_count ,        124
+# snd_count ,         96
+# snd_count ,        117
+# snd_count ,        113
+# snd_count ,        125
+# snd_count ,         97
+#               562000: Tile           3 - Receiving new packet
+# snd_count ,        118
+# snd_count ,        114
+# snd_count ,        126
+# snd_count ,         98
+# snd_count ,        119
+# snd_count ,        115
+# snd_count ,        127
+# snd_count ,         99
+# id_rem:011 , id_loc: 010, local_y: 001, local_x: 001, remote_y: 001, remote_x: 000
+#               570000: Tile           3 - Send 2
+# id_rem:010 , id_loc: 011, local_y: 001, local_x: 000, remote_y: 001, remote_x: 001
+#               570000: Tile           2 - Send 3
+# id_rem:010 , id_loc: 001, local_y: 000, local_x: 001, remote_y: 001, remote_x: 001
+#               570000: Tile           1 - Send 3
+# id_rem:001 , id_loc: 000, local_y: 000, local_x: 000, remote_y: 000, remote_x: 001
+#               570000: Tile           0 - Send 1
+# id_rem:001 , id_loc: 010, local_y: 001, local_x: 001, remote_y: 000, remote_x: 001
+#               570000: Tile           3 - Send 1
+# id_rem:000 , id_loc: 011, local_y: 001, local_x: 000, remote_y: 000, remote_x: 000
+#               570000: Tile           2 - Send 0
+# id_rem:000 , id_loc: 001, local_y: 000, local_x: 001, remote_y: 000, remote_x: 000
+#               570000: Tile           1 - Send 0
+# snd_count ,        120
+#               574000: Tile           0 - Receiving new packet
+# snd_count ,        116
+#               574000: Tile           1 - Receiving new packet
+# snd_count ,        128
+#               574000: Tile           2 - Receiving new packet
+# snd_count ,        100
+# snd_count ,        121
+# snd_count ,        129
+# snd_count ,        101
+# snd_count ,        122
+# snd_count ,        130
+# snd_count ,        102
+# snd_count ,        123
+# snd_count ,        131
+# snd_count ,        103
+# id_rem:001 , id_loc: 010, local_y: 001, local_x: 001, remote_y: 000, remote_x: 001
+#               586000: Tile           3 - Send 1
+# id_rem:010 , id_loc: 011, local_y: 001, local_x: 000, remote_y: 001, remote_x: 001
+#               586000: Tile           2 - Send 3
+# id_rem:010 , id_loc: 000, local_y: 000, local_x: 000, remote_y: 001, remote_x: 001
+#               586000: Tile           0 - Send 3
+# id_rem:000 , id_loc: 011, local_y: 001, local_x: 000, remote_y: 000, remote_x: 000
+#               586000: Tile           2 - Send 0
+# snd_count ,        124
+#               590000: Tile           1 - Receiving new packet
+# snd_count ,        132
+#               590000: Tile           2 - Receiving new packet
+# snd_count ,        125
+# snd_count ,        117
+# snd_count ,        133
+#               594000: Tile           3 - Receiving new packet
+# snd_count ,        126
+# snd_count ,        118
+# snd_count ,        134
+# snd_count ,        127
+# snd_count ,        119
+# snd_count ,        135
+# id_rem:001 , id_loc: 011, local_y: 001, local_x: 000, remote_y: 000, remote_x: 001
+#               602000: Tile           2 - Send 1
+# id_rem:000 , id_loc: 001, local_y: 000, local_x: 001, remote_y: 000, remote_x: 000
+#               602000: Tile           1 - Send 0
+# id_rem:010 , id_loc: 000, local_y: 000, local_x: 000, remote_y: 001, remote_x: 001
+#               602000: Tile           0 - Send 3
+# id_rem:011 , id_loc: 001, local_y: 000, local_x: 001, remote_y: 001, remote_x: 000
+#               602000: Tile           1 - Send 2
+# id_rem:011 , id_loc: 010, local_y: 001, local_x: 001, remote_y: 001, remote_x: 000
+#               602000: Tile           3 - Send 2
+# snd_count ,        128
+# snd_count ,        120
+#               606000: Tile           1 - Receiving new packet
+# snd_count ,        136
+#               606000: Tile           2 - Receiving new packet
+# snd_count ,        104
+# snd_count ,        129
+# snd_count ,        137
+# snd_count ,        105
+# snd_count ,        130
+# snd_count ,        138
+# snd_count ,        106
+# snd_count ,        131
+# snd_count ,        139
+# snd_count ,        107
+# id_rem:001 , id_loc: 010, local_y: 001, local_x: 001, remote_y: 000, remote_x: 001
+#               618000: Tile           3 - Send 1
+# id_rem:000 , id_loc: 011, local_y: 001, local_x: 000, remote_y: 000, remote_x: 000
+#               618000: Tile           2 - Send 0
+# id_rem:011 , id_loc: 000, local_y: 000, local_x: 000, remote_y: 001, remote_x: 000
+#               618000: Tile           0 - Send 2
+# id_rem:001 , id_loc: 011, local_y: 001, local_x: 000, remote_y: 000, remote_x: 001
+#               618000: Tile           2 - Send 1
+# snd_count ,        140
+#               622000: Tile           2 - Receiving new packet
+# snd_count ,        121
+# snd_count ,        141
+# snd_count ,        122
+# snd_count ,        142
+# snd_count ,        123
+# snd_count ,        143
+# id_rem:000 , id_loc: 011, local_y: 001, local_x: 000, remote_y: 000, remote_x: 000
+#               634000: Tile           2 - Send 0
+# id_rem:011 , id_loc: 001, local_y: 000, local_x: 001, remote_y: 001, remote_x: 000
+#               634000: Tile           1 - Send 2
+# id_rem:001 , id_loc: 010, local_y: 001, local_x: 001, remote_y: 000, remote_x: 001
+#               634000: Tile           3 - Send 1
+# snd_count ,        124
+# snd_count ,        108
+#               642000: Tile           0 - Receiving new packet
+# snd_count ,        125
+# snd_count ,        109
+# snd_count ,        126
+# snd_count ,        110
+# snd_count ,        127
+# snd_count ,        111
+# id_rem:011 , id_loc: 010, local_y: 001, local_x: 001, remote_y: 001, remote_x: 000
+#               650000: Tile           3 - Send 2
+# id_rem:011 , id_loc: 001, local_y: 000, local_x: 001, remote_y: 001, remote_x: 000
+#               650000: Tile           1 - Send 2
+# id_rem:001 , id_loc: 011, local_y: 001, local_x: 000, remote_y: 000, remote_x: 001
+#               650000: Tile           2 - Send 1
+# snd_count ,        144
+#               654000: Tile           2 - Receiving new packet
+# snd_count ,        145
+# snd_count ,        146
+# snd_count ,        147
+# id_rem:010 , id_loc: 011, local_y: 001, local_x: 000, remote_y: 001, remote_x: 001
+#               666000: Tile           2 - Send 3
+# id_rem:000 , id_loc: 010, local_y: 001, local_x: 001, remote_y: 000, remote_x: 000
+#               666000: Tile           3 - Send 0
+# id_rem:011 , id_loc: 001, local_y: 000, local_x: 001, remote_y: 001, remote_x: 000
+#               666000: Tile           1 - Send 2
+# id_rem:001 , id_loc: 000, local_y: 000, local_x: 000, remote_y: 000, remote_x: 001
+#               666000: Tile           0 - Send 1
+# snd_count ,        132
+# snd_count ,        128
+#               670000: Tile           1 - Receiving new packet
+# snd_count ,        112
+#               670000: Tile           3 - Receiving new packet
+# snd_count ,        133
+# snd_count ,        129
+# snd_count ,        113
+# snd_count ,        134
+# snd_count ,        130
+# snd_count ,        114
+# snd_count ,        135
+# snd_count ,        131
+# snd_count ,        115
+# id_rem:000 , id_loc: 010, local_y: 001, local_x: 001, remote_y: 000, remote_x: 000
+#               682000: Tile           3 - Send 0
+# id_rem:010 , id_loc: 001, local_y: 000, local_x: 001, remote_y: 001, remote_x: 001
+#               682000: Tile           1 - Send 3
+# id_rem:001 , id_loc: 000, local_y: 000, local_x: 000, remote_y: 000, remote_x: 001
+#               682000: Tile           0 - Send 1
+# id_rem:000 , id_loc: 001, local_y: 000, local_x: 001, remote_y: 000, remote_x: 000
+#               682000: Tile           1 - Send 0
+# id_rem:010 , id_loc: 011, local_y: 001, local_x: 000, remote_y: 001, remote_x: 001
+#               682000: Tile           2 - Send 3
+# snd_count ,        132
+#               686000: Tile           1 - Receiving new packet
+# snd_count ,        148
+#               686000: Tile           2 - Receiving new packet
+# snd_count ,        116
+#               690000: Tile           0 - Receiving new packet
+# snd_count ,        133
+# snd_count ,        149
+# snd_count ,        117
+# snd_count ,        134
+# snd_count ,        150
+# snd_count ,        118
+# snd_count ,        135
+# snd_count ,        151
+# snd_count ,        119
+# id_rem:001 , id_loc: 010, local_y: 001, local_x: 001, remote_y: 000, remote_x: 001
+#               698000: Tile           3 - Send 1
+# id_rem:001 , id_loc: 011, local_y: 001, local_x: 000, remote_y: 000, remote_x: 001
+#               698000: Tile           2 - Send 1
+# id_rem:011 , id_loc: 001, local_y: 000, local_x: 001, remote_y: 001, remote_x: 000
+#               698000: Tile           1 - Send 2
+# id_rem:011 , id_loc: 010, local_y: 001, local_x: 001, remote_y: 001, remote_x: 000
+#               698000: Tile           3 - Send 2
+# id_rem:001 , id_loc: 000, local_y: 000, local_x: 000, remote_y: 000, remote_x: 001
+#               698000: Tile           0 - Send 1
+# snd_count ,        136
+#               702000: Tile           1 - Receiving new packet
+# snd_count ,        152
+#               702000: Tile           2 - Receiving new packet
+# snd_count ,        120
+# snd_count ,        137
+#               706000: Tile           0 - Receiving new packet
+# snd_count ,        121
+# snd_count ,        138
+# snd_count ,        153
+# snd_count ,        122
+# snd_count ,        139
+# snd_count ,        154
+# snd_count ,        123
+# id_rem:000 , id_loc: 010, local_y: 001, local_x: 001, remote_y: 000, remote_x: 000
+#               714000: Tile           3 - Send 0
+# id_rem:001 , id_loc: 000, local_y: 000, local_x: 000, remote_y: 000, remote_x: 001
+#               714000: Tile           0 - Send 1
+# id_rem:011 , id_loc: 001, local_y: 000, local_x: 001, remote_y: 001, remote_x: 000
+#               714000: Tile           1 - Send 2
+# snd_count ,        140
+# snd_count ,        136
+#               718000: Tile           1 - Receiving new packet
+# snd_count ,        155
+#               718000: Tile           2 - Receiving new packet
+# snd_count ,        124
+# id_rem:010 , id_loc: 011, local_y: 001, local_x: 000, remote_y: 001, remote_x: 001
+#               718000: Tile           2 - Send 3
+# snd_count ,        141
+#               722000: Tile           0 - Receiving new packet
+# snd_count ,        137
+# snd_count ,        156
+# snd_count ,        125
+# snd_count ,        142
+# snd_count ,        138
+# snd_count ,        157
+# snd_count ,        126
+# snd_count ,        143
+# snd_count ,        139
+# snd_count ,        158
+# snd_count ,        127
+# id_rem:011 , id_loc: 010, local_y: 001, local_x: 001, remote_y: 001, remote_x: 000
+#               730000: Tile           3 - Send 2

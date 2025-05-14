@@ -283,9 +283,9 @@ package nocpackage is
     return boolean;
 
   function create_header (
-    -- local_y           : local_yx;
+    local_y           : local_yx;
     local_x           : local_yx;
-    -- remote_y          : local_yx;
+    remote_y          : local_yx;
     remote_x          : local_yx;
     msg_type          : noc_msg_type;
     reserved          : reserved_field_type)
@@ -365,9 +365,9 @@ package body nocpackage is
   end is_getm;
 
   function create_header (
-    -- local_y           : local_yx;
+     local_y           : local_yx;
     local_x           : local_yx;
-    -- remote_y          : local_yx;
+     remote_y          : local_yx;
     remote_x          : local_yx;
     msg_type          : noc_msg_type;
     reserved          : reserved_field_type)
@@ -378,12 +378,12 @@ package body nocpackage is
     header := (others => '0');
     header(NOC_FLIT_SIZE - 1 downto
            NOC_FLIT_SIZE - PREAMBLE_WIDTH) := PREAMBLE_HEADER;
-    -- header(NOC_FLIT_SIZE - PREAMBLE_WIDTH - 1 downto
-    --       NOC_FLIT_SIZE - PREAMBLE_WIDTH - YX_WIDTH) := "00" & local_y;
+     header(NOC_FLIT_SIZE - PREAMBLE_WIDTH - 1 downto
+           NOC_FLIT_SIZE - PREAMBLE_WIDTH - YX_WIDTH) := "00" & local_y;
     header(NOC_FLIT_SIZE - PREAMBLE_WIDTH - 1 downto
            NOC_FLIT_SIZE - PREAMBLE_WIDTH - YX_WIDTH) := "00" & local_x;
-    -- header(NOC_FLIT_SIZE - PREAMBLE_WIDTH - 2*YX_WIDTH - 1 downto
-    --       NOC_FLIT_SIZE - PREAMBLE_WIDTH - 3*YX_WIDTH) := "00" & remote_y;
+     header(NOC_FLIT_SIZE - PREAMBLE_WIDTH - 2*YX_WIDTH - 1 downto
+           NOC_FLIT_SIZE - PREAMBLE_WIDTH - 3*YX_WIDTH) := "00" & remote_y;
     header(NOC_FLIT_SIZE - PREAMBLE_WIDTH - YX_WIDTH - 1 downto
            NOC_FLIT_SIZE - PREAMBLE_WIDTH - 2*YX_WIDTH) := "00" & remote_x;
     header(NOC_FLIT_SIZE - PREAMBLE_WIDTH - 2*YX_WIDTH - 1 downto

@@ -208,6 +208,10 @@ module lookahead_router #(
                         saved_routing_request[g_i] <= fifo_head[g_i].header.routing;
                     end
                 end
+		   /* $display("%0t [LOOK] port %0d got HEAD with dest.x = %0d  (raw=0x%h)",
+             $time, g_i,
+             fifo_head[g_i].header.info.destination.x,
+             fifo_head[g_i].flit); */
             end
 
             assign final_routing_request[g_i] = in_valid_head[g_i] ? fifo_head[g_i].header.routing :

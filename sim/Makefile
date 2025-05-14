@@ -2,7 +2,7 @@ VCOM = vcom -quiet -93
 VLOG = vlog -quiet
 SVLOG = vlog -sv -quiet -suppress 2583
 
-SIM_GUI = 1
+#SIM_GUI = 1
 
 all: sim-compile-sync
 

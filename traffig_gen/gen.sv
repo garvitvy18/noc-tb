@@ -28,6 +28,7 @@ module gen
 
    localparam YX_WIDTH = 3;
    typedef logic [2:0] local_yx;
+   localparam ID_WIDTH  = $clog2(TILES_NUM);
 
    localparam MSG_TYPE_WIDTH = 3;
    typedef logic [MSG_TYPE_WIDTH-1:0] noc_msg_type;
@@ -37,22 +38,24 @@ module gen
 
    localparam NOC_FLIT_SIZE = 66;
    typedef logic [NOC_FLIT_SIZE-1:0] noc_flit_type;
-
+   typedef logic [ID_WIDTH-1:0]          id_t;
    localparam NEXT_ROUTING_WIDTH = 3;
 
    // NoC Size --> Begin
-   localparam XLEN = 4;
-   localparam YLEN = 0;
-   localparam TILES_NUM = XLEN;
+   localparam XLEN = 2;
+   localparam YLEN = 2;
+   localparam TILES_NUM = XLEN*YLEN;
+//   localparam ID_WIDTH  = $clog2(TILES_NUM);
+
 
    const local_yx tile_x[0:TILES_NUM - 1]
      = {
 	3'b000,
 	3'b001, 
-	3'b010,
-	3'b011 //,
-//	3'b000,
-//	3'b001 ,
+	//3'b010,
+	//3'b011 //,
+	3'b000,
+	3'b001// ,
 //	 3'b010,
 //	 3'b011,
 //	 3'b000,
@@ -64,7 +67,7 @@ module gen
 //	 3'b010,
 //	 3'b011
 	};
-   const local_yx tile_y[0:TILES_NUM - 1] = { 3'b000, 3'b000, 3'b000, 3'b000 };
+   const local_yx tile_y[0:TILES_NUM - 1] = { 3'b000, 3'b000, 3'b001, 3'b001 };
    /*const local_yx tile_y[0:TILES_NUM - 1]
      = {
 	3'b000,
@@ -86,53 +89,112 @@ module gen
 	}; */
    // NoC Size --> End
 
-   // Helper function
+//hamiltonian
+
+    // // 2D array storing mapping from (x, y) -> index
+//      logic [$clog2(XLEN*YLEN)-1:0] map [0:YLEN-1][0:XLEN-1];
+	logic [$clog2(XLEN*YLEN)-1:0] ham_map [0:YLEN-1][0:XLEN-1];
+
+ /*   initial begin
+        int visited [0:YLEN-1][0:XLEN-1];
+        static int x = 0, y = 0, dir = 0;
+        static int dx[0:3] = '{1, 0, -1, 0};  // right, down, left, up
+        static int dy[0:3] = '{0, 1, 0, -1};
+        static int val = 0;
+
+        foreach (visited[yy, xx]) visited[yy][xx] = 0;
+
+        for (int step = 0; step < XLEN * YLEN; step++) begin
+            static int nx, ny;
+			
+			map[y][x] = val++;
+            visited[y][x] = 1;
+
+            // Try current direction
+            nx = x + dx[dir];
+            ny = y + dy[dir];
+
+            // If invalid or visited, change direction
+            if (nx < 0 || nx >= XLEN || ny < 0 || ny >= YLEN || visited[ny][nx]) begin
+                dir = (dir + 1) % 4;
+                nx = x + dx[dir];
+                ny = y + dy[dir];
+            end
+
+            x = nx;
+            y = ny;
+        end
+    end */
+
+	initial begin
+  		ham_map[0][0] = 3'b000; // (0,0)
+  		ham_map[0][1] = 3'b001; // (1,0)
+  		ham_map[1][1] = 3'b010; // (1,1)
+  		ham_map[1][0] = 3'b011; // (0,1)
+	end
+
+	function automatic [$clog2(XLEN*YLEN)-1:0] get_hamiltonian_index(
+		input logic [$clog2(YLEN)-1:0] y,
+		input logic [$clog2(XLEN)-1:0] x
+	);
+		return ham_map[y][x];
+	endfunction
+
+
    function noc_flit_type create_header
      (
-//      local_yx local_y,
+     local_yx local_y,
       local_yx local_x,
-//      local_yx remote_y,
+     local_yx remote_y,
       local_yx remote_x,
       noc_msg_type msg_type,
       reserved_field_type reserved
       );
 
+
+
       noc_flit_type header;
-      logic [NEXT_ROUTING_WIDTH-1:0] go_left, go_right; // go_up, go_down;
-      logic [YX_WIDTH-1:0] dist_cw, dist_ccw;
+
+	logic [$clog2(XLEN*YLEN)-1:0] hamiltonian_index_old;
+	logic [$clog2(XLEN*YLEN)-1:0] hamiltonian_index_new;
+	logic [NEXT_ROUTING_WIDTH-1:0] go_left, go_right;
+        logic [YX_WIDTH-1:0] id_rem, id_loc,dist_cw, dist_ccw;
+      id_loc = get_hamiltonian_index( local_y,  local_x);
+      id_rem = get_hamiltonian_index( remote_y,  remote_x);
       header = 0;
       header[NOC_FLIT_SIZE - 1 : NOC_FLIT_SIZE - PREAMBLE_WIDTH] = preamble_header;
 //      header[NOC_FLIT_SIZE - PREAMBLE_WIDTH - 1 : NOC_FLIT_SIZE - PREAMBLE_WIDTH - YX_WIDTH] =  local_y;
-      header[NOC_FLIT_SIZE - PREAMBLE_WIDTH - 1 : NOC_FLIT_SIZE - PREAMBLE_WIDTH - YX_WIDTH] = local_x;
+      header[NOC_FLIT_SIZE - PREAMBLE_WIDTH - 1 : NOC_FLIT_SIZE - PREAMBLE_WIDTH - YX_WIDTH] = id_loc;
 //      header[NOC_FLIT_SIZE - PREAMBLE_WIDTH - 2*YX_WIDTH - 1 : NOC_FLIT_SIZE - PREAMBLE_WIDTH - 3*YX_WIDTH] = remote_y;
-      header[NOC_FLIT_SIZE - PREAMBLE_WIDTH - YX_WIDTH - 1 : NOC_FLIT_SIZE - PREAMBLE_WIDTH - 2*YX_WIDTH] = remote_x;
+      header[NOC_FLIT_SIZE - PREAMBLE_WIDTH - YX_WIDTH - 1 : NOC_FLIT_SIZE - PREAMBLE_WIDTH - 2*YX_WIDTH] = id_rem;
       header[NOC_FLIT_SIZE - PREAMBLE_WIDTH - 2*YX_WIDTH - 1 : NOC_FLIT_SIZE - PREAMBLE_WIDTH - 2*YX_WIDTH - MSG_TYPE_WIDTH] = msg_type;
       header[NOC_FLIT_SIZE - PREAMBLE_WIDTH - 2*YX_WIDTH - MSG_TYPE_WIDTH - 1 : NOC_FLIT_SIZE - PREAMBLE_WIDTH - 2*YX_WIDTH - MSG_TYPE_WIDTH - RESERVED_WIDTH] = reserved;
-    dist_cw  = (remote_x - local_x + XLEN) % XLEN;
-    dist_ccw = (local_x - remote_x + XLEN) % XLEN;
-    // Determine direction based on local_x and remote_x
-     if (local_x < remote_x) begin // || (local_x == XLEN-1 && remote_x == 0))
-      if(dist_cw > dist_ccw) begin
-	      go_left = 3'b001;
-              go_right = 3'b101;
-      end
-      else if(dist_ccw >= dist_cw) begin
-	    go_right = 3'b010; // Move East (1)
-            go_left = 3'b110;
-      end
+      header[NOC_FLIT_SIZE - PREAMBLE_WIDTH - 2*YX_WIDTH - MSG_TYPE_WIDTH - RESERVED_WIDTH - 1 : NOC_FLIT_SIZE - PREAMBLE_WIDTH - 2*YX_WIDTH - MSG_TYPE_WIDTH - RESERVED_WIDTH - 3] = local_y;	
+      header[NOC_FLIT_SIZE - PREAMBLE_WIDTH - 2*YX_WIDTH - MSG_TYPE_WIDTH - RESERVED_WIDTH - 4 : NOC_FLIT_SIZE - PREAMBLE_WIDTH - 2*YX_WIDTH - MSG_TYPE_WIDTH - RESERVED_WIDTH - 6] = local_x;	
+    
+/*	hamiltonian_index_old = get_hamiltonian_index(local_y, local_x);
+        hamiltonian_index_new = get_hamiltonian_index(remote_y, remote_x);
 
+    if (hamiltonian_index_new >= hamiltonian_index_old) begin
+      go_right = 3'b010;
+      go_left  = 3'b110;
+    end else begin
+      go_left  = 3'b001;
+      go_right = 3'b101;
     end
-    if (local_x > remote_x) begin
-       if(dist_cw > dist_ccw) begin
-              go_left = 3'b001;
-              go_right = 3'b101;
-      end
-      else if(dist_ccw >= dist_cw) begin
-            go_right = 3'b010; // Move East (1)
-            go_left = 3'b110;
-      end
 
-    end
+    // end
+    // if (local_x > remote_x) begin
+    //    if(dist_cw > dist_ccw) begin
+    //           go_left = 3'b001;
+    //           go_right = 3'b101;
+    //   end
+    //   else if(dist_ccw >= dist_cw) begin
+    //         go_right = 3'b010; // Move East (1)
+    //         go_left = 3'b110;
+    //   end
+
+    // end
 
     // Compute shortest path in a Ring (Clockwise vs Counterclockwise)
    // logic [YX_WIDTH-1:0] dist_cw, dist_ccw;
@@ -147,10 +209,38 @@ module gen
     //     header[2:0] = 3'b001 & go_left;  // Move West (0) or Wrap-around to last tile
     // end
 
-    if (local_x == remote_x) begin
+    if (hamiltonian_index_new == hamiltonian_index_old) begin
         header[NEXT_ROUTING_WIDTH - 1 : 0] = 3'b100; // Enable (2)
     end
+*/
+   //  Lookup 1D Hamiltonian IDs
 
+$display("id_rem:%b , id_loc: %b, local_y: %b, local_x: %b, remote_y: %b, remote_x: %b", id_rem, id_loc, local_y, local_x, remote_y, remote_x );
+  //  Compute ring distances
+  dist_cw  = (id_rem + TILES_NUM - id_loc) % TILES_NUM;
+  dist_ccw = (id_loc  + TILES_NUM - id_rem) % TILES_NUM;
+
+
+    if (id_loc < id_rem) // || (local_x == XLEN-1 && remote_x == 0))
+        go_right = 3'b010; // Move East (1)
+    else
+        go_right = 3'b101; // No move in this direction
+
+    if (id_loc > id_rem) // || (local_x == 0 && remote_x == XLEN-1))
+        go_left = 3'b001;  // Move West (0)
+    else
+        go_left = 3'b110;  // No move in this direction
+
+    // Compute shortest path in a Ring (Clockwise vs Counterclockwise)
+   // logic [YX_WIDTH-1:0] dist_cw, dist_ccw;
+
+    //dist_cw  = (remote_x >= local_x) ? (remote_x - local_x) : (XLEN + remote_x - local_x);
+    //dist_ccw = (local_x >= remote_x) ? (local_x - remote_x) : (local_x + XLEN - remote_x);
+	header[NEXT_ROUTING_WIDTH - 1 : 0] = 3'b011 & go_left & go_right;
+    // Select routing direction (Ring-based decision with wrap-around)
+    if (id_loc == id_rem) begin
+        header[NEXT_ROUTING_WIDTH - 1 : 0] = 3'b100; // Enable (2)
+	end
       return header;
    endfunction
 
@@ -268,9 +358,9 @@ module gen
 		     incr_total_snd[i][dst_next[i]] = 1'b1;
 		     sample_dst[i] = 1'b1;
 		     input_req[i] = 1'b1;
-		     input_data[i] = create_header(//tile_y[i],
+		     input_data[i] = create_header(tile_y[i],
 						   tile_x[i],
-						   //tile_y[dst_next[i]],
+						   tile_y[dst_next[i]],
 						   tile_x[dst_next[i]],
 						   3'b111,
 						   snd_count[i][RESERVED_WIDTH-1:0]);
@@ -287,9 +377,9 @@ module gen
 			incr_total_snd[i][dst_next[i]] = 1'b1;
 			sample_dst[i] = 1'b1;
 			input_req[i] = 1'b1;
-			input_data[i] = create_header(//tile_y[i],
+			input_data[i] = create_header(tile_y[i],
 						      tile_x[i],
-						      //tile_y[dst_next[i]],
+						      tile_y[dst_next[i]],
 						      tile_x[dst_next[i]],
 						      3'b111,
 						      snd_count[i][RESERVED_WIDTH-1:0]);
@@ -360,8 +450,23 @@ module gen
 	 assign new_flit[i] = output_req[i] & output_ack[i];
 	 assign new_packet[i] = output_data[i][NOC_FLIT_SIZE-1] & new_flit[i];
 	// assign src_next[i] = output_data[i][NOC_FLIT_SIZE - PREAMBLE_WIDTH - 1:NOC_FLIT_SIZE - PREAMBLE_WIDTH - YX_WIDTH] * XLEN +
-	assign src_next[i] =  output_data[i][NOC_FLIT_SIZE - PREAMBLE_WIDTH - 1 : NOC_FLIT_SIZE - PREAMBLE_WIDTH - YX_WIDTH];
-	 always_ff @(posedge clk) begin
+	//assign src_next[i] =  output_data[i][NOC_FLIT_SIZE - PREAMBLE_WIDTH - 2*YX_WIDTH - MSG_TYPE_WIDTH - RESERVED_WIDTH - 1 : NOC_FLIT_SIZE - PREAMBLE_WIDTH - 2*YX_WIDTH - MSG_TYPE_WIDTH - RESERVED_WIDTH - 3];
+	assign src_next[i] = output_data[i][NOC_FLIT_SIZE - PREAMBLE_WIDTH - 2*YX_WIDTH - MSG_TYPE_WIDTH - RESERVED_WIDTH - 1 : NOC_FLIT_SIZE - PREAMBLE_WIDTH - 2*YX_WIDTH - MSG_TYPE_WIDTH - RESERVED_WIDTH - 3] *XLEN
+                          + output_data[i][NOC_FLIT_SIZE - PREAMBLE_WIDTH - 2*YX_WIDTH - MSG_TYPE_WIDTH - RESERVED_WIDTH - 4 : NOC_FLIT_SIZE - PREAMBLE_WIDTH - 2*YX_WIDTH - MSG_TYPE_WIDTH - RESERVED_WIDTH - 6];
+
+  /* logic [YX_WIDTH-1:0] rx_y, rx_x;
+    // extract exactly where you packed them in create_header():
+    assign rx_y = output_data[i]
+      [NOC_FLIT_SIZE - PREAMBLE_WIDTH - 1
+       : NOC_FLIT_SIZE - PREAMBLE_WIDTH - YX_WIDTH];
+    assign rx_x = output_data[i]
+      [NOC_FLIT_SIZE - PREAMBLE_WIDTH - YX_WIDTH - 1
+       : NOC_FLIT_SIZE - PREAMBLE_WIDTH - 2*YX_WIDTH];
+
+    // now this will synthesize and won’t throw an “unknown identifier” on ham_map:
+    assign src_next[i] = ham_map[rx_y][rx_x];
+*/
+	always_ff @(posedge clk) begin
 	    if (rstn == 1'b0 || soft_reset == 1'b1) begin
 	       src_current[i] <= '0;
 	       total_rcv[i] <= '0;

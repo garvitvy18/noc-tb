@@ -33,8 +33,8 @@ use work.nocpackage.all;
 
 entity noc_xy is
   generic (
-    XLEN      : integer := 4;
-    YLEN      : integer := 0;
+    XLEN      : integer := 2;
+    YLEN      : integer := 2;
     TILES_NUM : integer := 4;
     flit_size : integer := 34);
 
@@ -75,7 +75,7 @@ architecture ring of noc_xy is
     --    |        |     |     |          |
     -- YLEN-1,0 - ...   ...   ... - YLEN-1,XLEN-1
    -- for i in 0 to YLEN-1 loop
-      for i in 0 to XLEN-1 loop
+      for i in 0 to (XLEN*YLEN)-1 loop
         -- local ports are all set
         ports(i)(2) := '1';
        -- if i /= XLEN-1 then
@@ -107,7 +107,7 @@ architecture ring of noc_xy is
     variable x : local_vec;
   begin  -- set_tile_id
     --for i in 0 to YLEN-1 loop
-      for i in 0 to XLEN-1 loop
+      for i in 0 to TILES_NUM-1 loop
         x(i) := conv_std_logic_vector(i, id_bits);
       end loop;  -- j
    -- end loop;  -- i
@@ -115,24 +115,29 @@ architecture ring of noc_xy is
   end set_tile_x;
 
  -- function set_tile_y (
-  --  constant XLEN : integer;
-  --  constant YLEN : integer;
-  --  constant id_bits  : integer)
-  --  return local_vec is
-  --  variable y : local_vec;
-  --begin  -- set_tile_id
+   -- constant XLEN : integer;
+   -- constant YLEN : integer;
+   -- constant id_bits  : integer)
+   -- return local_vec is
+   -- variable y : local_vec;
+ --begin  -- set_tile_id
   --  for i in 0 to YLEN-1 loop
-  --    for j in 0 to XLEN-1 loop
-  --      y(i * XLEN + j) := conv_std_logic_vector(i, id_bits);
+  --    for j in 0 to TILES_NUM-1 loop
+  --      y(j) := conv_std_logic_vector(j/XLEN, id_bits);
   --    end loop;  -- j
   --  end loop;  -- i
   -- return y;
-  --end set_tile_y;
+ -- end set_tile_y;
 
   constant ROUTER_PORTS : ports_vec := set_router_ports(XLEN, YLEN);
-  constant localx       : local_vec := set_tile_x(XLEN, YLEN, 3);
-  -- constant localy       : local_vec := set_tile_y(XLEN, YLEN, 3);
-
+--  constant localx       : local_vec := set_tile_x(XLEN, YLEN, 3);
+--  constant localy       : local_vec := set_tile_y(XLEN, YLEN, 3);
+constant ring_coord : local_vec := (
+  0 => conv_std_logic_vector(0, 3),
+  1 => conv_std_logic_vector(1, 3),
+  2 => conv_std_logic_vector(3, 3),
+  3 => conv_std_logic_vector(2, 3)
+);
   component router
     generic (
       flow_control : integer;
@@ -143,7 +148,7 @@ architecture ring of noc_xy is
       clk           : in  std_logic;
       rst           : in  std_logic;
       CONST_localx  : in  std_logic_vector(2 downto 0);
-    --  CONST_localy  : in  std_logic_vector(2 downto 0);
+--      CONST_localy  : in  std_logic_vector(2 downto 0);
      -- data_n_in     : in  std_logic_vector(width-1 downto 0);
      -- data_s_in     : in  std_logic_vector(width-1 downto 0);
       data_w_in     : in  std_logic_vector(width-1 downto 0);
@@ -177,48 +182,43 @@ architecture ring of noc_xy is
 
 
 begin  -- ring
+  -- Tile 0 ←→ Tile 3
+  data_w_in(0)         <= data_e_out(2);
+  data_void_in_i(0)(0) <= data_void_out_i(2)(1);
+  stop_in_i(0)(0)      <= stop_out_i(2)(1);
 
-  ringgen: for i in 0 to XLEN-1 generate
+  data_e_in(0)         <= data_w_out(1);
+  data_void_in_i(0)(1) <= data_void_out_i(1)(0);
+  stop_in_i(0)(1)      <= stop_out_i(1)(0);
 
-    -- West Port (connects to previous router, wraps around for first router)
-    west_wraparound: if i = 0 generate
-      data_w_in(i) <= data_e_out(XLEN-1);  -- First router gets data from last
-      data_void_in_i(i)(0) <= data_void_out_i(XLEN-1)(1);
-      stop_in_i(i)(0) <= stop_out_i(XLEN-1)(1);
-    end generate west_wraparound;
+  -- Tile 1 ←→ Tile 0 and Tile 2
+  data_w_in(1)         <= data_e_out(0);
+  data_void_in_i(1)(0) <= data_void_out_i(0)(1);
+  stop_in_i(1)(0)      <= stop_out_i(0)(1);
 
-    west_normal: if i /= 0 generate
-      data_w_in(i) <= data_e_out(i-1);  -- Normal connection to left neighbor
-      data_void_in_i(i)(0) <= data_void_out_i(i-1)(1);
-      stop_in_i(i)(0) <= stop_out_i(i-1)(1);
-    end generate west_normal;
+  data_e_in(1)         <= data_w_out(3);
+  data_void_in_i(1)(1) <= data_void_out_i(3)(0);
+  stop_in_i(1)(1)      <= stop_out_i(3)(0);
 
-    -- East Port (connects to next router, wraps around for last router)
-    east_wraparound: if i = XLEN-1 generate
-      data_e_in(i) <= data_w_out(0);  -- Last router gets data from first
-      data_void_in_i(i)(1) <= data_void_out_i(0)(0);
-      stop_in_i(i)(1) <= stop_out_i(0)(0);
-    end generate east_wraparound;
+  -- Tile 2 ←→ Tile 1 and Tile 3
+  data_w_in(2)         <= data_e_out(3);
+  data_void_in_i(2)(0) <= data_void_out_i(3)(1);
+  stop_in_i(2)(0)      <= stop_out_i(3)(1);
 
-    east_normal: if i /= XLEN-1 generate
-      data_e_in(i) <= data_w_out(i+1);  -- Normal connection to right neighbor
-      data_void_in_i(i)(1) <= data_void_out_i(i+1)(0);
-      stop_in_i(i)(1) <= stop_out_i(i+1)(0);
-    end generate east_normal;
+  data_e_in(2)         <= data_w_out(0);
+  data_void_in_i(2)(1) <= data_void_out_i(0)(0);
+  stop_in_i(2)(1)      <= stop_out_i(0)(0);
 
-    -- Local Port (always active)
---    data_p_in(i) <= input_port(i);
---    data_void_in_i(i)(2) <= data_void_in(i);
---    stop_in_i(i)(2) <= stop_in(i);
---    data_void_out(i) <= data_void_out_i(i)(2);
---    stop_out(i) <= stop_out_i(i)(2);
-    -- data_p_in(i) <= input_port(i);
-    -- data_void_in_i(i)(2) <= data_void_in(i);
-    -- stop_in_i(i)(2) <= stop_in(i);
-    -- data_void_out(i) <= data_void_out_i(i)(2);
-    -- stop_out(i) <= stop_out_i(i)(2);
+  -- Tile 3 ←→ Tile 2 and Tile 0
+  data_w_in(3)         <= data_e_out(1);
+  data_void_in_i(3)(0) <= data_void_out_i(1)(1);
+  stop_in_i(3)(0)      <= stop_out_i(1)(1);
 
-  end generate ringgen;
+  data_e_in(3)         <= data_w_out(2);
+  data_void_in_i(3)(1) <= data_void_out_i(2)(0);
+  stop_in_i(3)(1)      <= stop_out_i(2)(0);
+
+  --end generate ringgen;
 
 
   routerinst: for k in 0 to TILES_NUM-1 generate
@@ -239,8 +239,8 @@ begin  -- ring
       port map (
           clk           => clk,
           rst           => rst,
-          CONST_localx  => localx(k),
-     --     CONST_localy  => localy(k),
+          CONST_localx  => ring_coord(k),
+--          CONST_localy  => localy(k),
          -- data_n_in     => data_n_in(k),
          -- data_s_in     => data_s_in(k),
           data_w_in     => data_w_in(k),
