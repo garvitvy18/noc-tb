@@ -59,7 +59,7 @@ architecture ring of noc_xy is
   type local_vec is array (TILES_NUM-1 downto 0) of local_yx;
   type handshake_vec is array (TILES_NUM-1 downto 0) of
     std_logic_vector(2 downto 0);
-
+  type int_vec is array (natural range <>) of integer;
   function set_router_ports(
     constant XLEN : integer;
     constant YLEN : integer)
@@ -129,15 +129,79 @@ architecture ring of noc_xy is
   -- return y;
  -- end set_tile_y;
 
+
+  -- Row-major mapping from (x,y) to linear tile ID
+  function id_of_xy(x, y, XLEN : integer) return integer is
+  begin
+    return y*XLEN + x;
+  end;
+
+  -- Build a serpentine (snake) order that visits every tile exactly once.
+  -- Even rows:  x = 0 .. XLEN-1
+  -- Odd rows:   x = XLEN-1 .. 0
+  function build_ring_order(XLEN, YLEN : integer) return int_vec is
+    variable order : int_vec(0 to XLEN*YLEN-1);
+    variable p     : integer := 0;
+  begin
+    for y in 0 to YLEN-1 loop
+      if (y mod 2) = 0 then
+        for x in 0 to XLEN-1 loop
+          order(p) := id_of_xy(x, y, XLEN); p := p + 1;
+        end loop;
+      else
+        for x in XLEN-1 downto 0 loop
+          order(p) := id_of_xy(x, y, XLEN); p := p + 1;
+        end loop;
+      end if;
+    end loop;
+    return order;
+  end;
+
+
+  -- For each tile k, who is the next tile on the ring?
+  function build_next_of(order : int_vec) return int_vec is
+    variable next_of : int_vec(0 to order'length-1);
+    variable N       : integer := order'length;
+  begin
+    for i in 0 to N-1 loop
+      next_of(order(i)) := order((i+1) mod N);
+    end loop;
+    return next_of;
+  end;
+
+  -- For each tile k, who is the previous tile on the ring?
+  function build_prev_of(order : int_vec) return int_vec is
+    variable prev_of : int_vec(0 to order'length-1);
+    variable N       : integer := order'length;
+    variable pm1     : integer;
+  begin
+    for i in 0 to N-1 loop
+      pm1 := (i-1+N) mod N;
+      prev_of(order(i)) := order(pm1);
+    end loop;
+    return prev_of;
+  end;
+
+function build_ring_localx(order : int_vec) return local_vec is
+  variable v : local_vec;  -- local_vec is already constrained by TILES_NUM
+begin
+  for i in 0 to order'length-1 loop
+    v(order(i)) := conv_std_logic_vector(i, 3);  -- keep 3-bit width as before
+  end loop;
+  return v;
+end;
+
   constant ROUTER_PORTS : ports_vec := set_router_ports(XLEN, YLEN);
 --  constant localx       : local_vec := set_tile_x(XLEN, YLEN, 3);
 --  constant localy       : local_vec := set_tile_y(XLEN, YLEN, 3);
-constant ring_coord : local_vec := (
-  0 => conv_std_logic_vector(0, 3),
-  1 => conv_std_logic_vector(1, 3),
-  2 => conv_std_logic_vector(3, 3),
-  3 => conv_std_logic_vector(2, 3)
-);
+    -- Auto-built ring order and neighbor tables
+  constant RING_ORDER : int_vec(0 to TILES_NUM-1) := build_ring_order(XLEN, YLEN);
+  constant RING_NEXT  : int_vec(0 to TILES_NUM-1) := build_next_of(RING_ORDER);
+  constant RING_PREV  : int_vec(0 to TILES_NUM-1) := build_prev_of(RING_ORDER);
+
+  -- Keep the SAME constant name 'ring_coord' but auto-generate it now
+  constant ring_coord : local_vec := build_ring_localx(RING_ORDER);
+
   component router
     generic (
       flow_control : integer;
@@ -180,45 +244,24 @@ constant ring_coord : local_vec := (
   signal data_void_out_i : handshake_vec;
   signal stop_out_i      : handshake_vec;
 
+begin
+  -- Generic ring wiring for any XLEN×YLEN:
+  -- West input of k comes from East output of PREV(k)
+  -- East input of k comes from West output of NEXT(k)
+  ring_wiring: for k in 0 to TILES_NUM-1 generate
+    constant nxt : integer := RING_NEXT(k);
+    constant prv : integer := RING_PREV(k);
 
-begin  -- ring
-  -- Tile 0 ←→ Tile 3
-  data_w_in(0)         <= data_e_out(2);
-  data_void_in_i(0)(0) <= data_void_out_i(2)(1);
-  stop_in_i(0)(0)      <= stop_out_i(2)(1);
+    -- W lane (index 0) is driven by E lane (index 1) of PREV
+    data_w_in(k)         <= data_e_out(prv);
+    data_void_in_i(k)(0) <= data_void_out_i(prv)(1);
+    stop_in_i(k)(0)      <= stop_out_i(prv)(1);
 
-  data_e_in(0)         <= data_w_out(1);
-  data_void_in_i(0)(1) <= data_void_out_i(1)(0);
-  stop_in_i(0)(1)      <= stop_out_i(1)(0);
-
-  -- Tile 1 ←→ Tile 0 and Tile 2
-  data_w_in(1)         <= data_e_out(0);
-  data_void_in_i(1)(0) <= data_void_out_i(0)(1);
-  stop_in_i(1)(0)      <= stop_out_i(0)(1);
-
-  data_e_in(1)         <= data_w_out(3);
-  data_void_in_i(1)(1) <= data_void_out_i(3)(0);
-  stop_in_i(1)(1)      <= stop_out_i(3)(0);
-
-  -- Tile 2 ←→ Tile 1 and Tile 3
-  data_w_in(2)         <= data_e_out(3);
-  data_void_in_i(2)(0) <= data_void_out_i(3)(1);
-  stop_in_i(2)(0)      <= stop_out_i(3)(1);
-
-  data_e_in(2)         <= data_w_out(0);
-  data_void_in_i(2)(1) <= data_void_out_i(0)(0);
-  stop_in_i(2)(1)      <= stop_out_i(0)(0);
-
-  -- Tile 3 ←→ Tile 2 and Tile 0
-  data_w_in(3)         <= data_e_out(1);
-  data_void_in_i(3)(0) <= data_void_out_i(1)(1);
-  stop_in_i(3)(0)      <= stop_out_i(1)(1);
-
-  data_e_in(3)         <= data_w_out(2);
-  data_void_in_i(3)(1) <= data_void_out_i(2)(0);
-  stop_in_i(3)(1)      <= stop_out_i(2)(0);
-
-  --end generate ringgen;
+    -- E lane (index 1) is driven by W lane (index 0) of NEXT
+    data_e_in(k)         <= data_w_out(nxt);
+    data_void_in_i(k)(1) <= data_void_out_i(nxt)(0);
+    stop_in_i(k)(1)      <= stop_out_i(nxt)(0);
+  end generate;
 
 
   routerinst: for k in 0 to TILES_NUM-1 generate

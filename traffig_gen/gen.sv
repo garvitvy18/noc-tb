@@ -26,10 +26,18 @@ module gen
    const logic [1:0] preamble_tail = 2'b01;
    const logic [1:0] preamble_1flit = 2'b10;
 
-   localparam YX_WIDTH = 3;
-   typedef logic [2:0] local_yx;
-   localparam ID_WIDTH  = $clog2(TILES_NUM);
+   // NoC Size --> Begin
+   localparam int unsigned XLEN      = 2;
+   localparam int unsigned YLEN      = 2;
+   localparam int unsigned TILES_NUM = XLEN*YLEN;
+   // NoC Size --> End
 
+   // Coordinate and ID widths (parametric)
+localparam int unsigned YX_WIDTH = 3;
+   localparam int unsigned ID_WIDTH  = $clog2(TILES_NUM);
+
+   typedef logic [YX_WIDTH-1:0] local_yx;
+   //typedef logic [ID_WIDTH-1:0] id_t;
    localparam MSG_TYPE_WIDTH = 3;
    typedef logic [MSG_TYPE_WIDTH-1:0] noc_msg_type;
 
@@ -41,104 +49,25 @@ module gen
    typedef logic [ID_WIDTH-1:0]          id_t;
    localparam NEXT_ROUTING_WIDTH = 3;
 
-   // NoC Size --> Begin
-   localparam XLEN = 2;
-   localparam YLEN = 2;
-   localparam TILES_NUM = XLEN*YLEN;
-//   localparam ID_WIDTH  = $clog2(TILES_NUM);
+// Hamiltonian helpers (generalized, no tables)
 
+// Convert flat tile index -> (x,y) in row-major order
+function automatic local_yx idx_to_x(id_t i);
+  return local_yx'( i % XLEN );
+endfunction
 
-   const local_yx tile_x[0:TILES_NUM - 1]
-     = {
-	3'b000,
-	3'b001, 
-	//3'b010,
-	//3'b011 //,
-	3'b000,
-	3'b001// ,
-//	 3'b010,
-//	 3'b011,
-//	 3'b000,
-//	 3'b001,
-//	 3'b010,
-//	 3'b011,
-//	 3'b000,
-//	 3'b001,
-//	 3'b010,
-//	 3'b011
-	};
-   const local_yx tile_y[0:TILES_NUM - 1] = { 3'b000, 3'b000, 3'b001, 3'b001 };
-   /*const local_yx tile_y[0:TILES_NUM - 1]
-     = {
-	3'b000,
-	3'b000,
-	 3'b000,
-	 3'b000,
-	3'b001,
-	3'b001 ,
-	 3'b001,
-	 3'b001,
-	 3'b010,
-	 3'b010,
-	 3'b010,
-	 3'b010,
-	 3'b011,
-	 3'b011,
-	 3'b011,
-	 3'b011
-	}; */
-   // NoC Size --> End
+function automatic local_yx idx_to_y(id_t i);
+  return local_yx'( i / XLEN );
+endfunction
 
-//hamiltonian
-
-    // // 2D array storing mapping from (x, y) -> index
-//      logic [$clog2(XLEN*YLEN)-1:0] map [0:YLEN-1][0:XLEN-1];
-	logic [$clog2(XLEN*YLEN)-1:0] ham_map [0:YLEN-1][0:XLEN-1];
-
- /*   initial begin
-        int visited [0:YLEN-1][0:XLEN-1];
-        static int x = 0, y = 0, dir = 0;
-        static int dx[0:3] = '{1, 0, -1, 0};  // right, down, left, up
-        static int dy[0:3] = '{0, 1, 0, -1};
-        static int val = 0;
-
-        foreach (visited[yy, xx]) visited[yy][xx] = 0;
-
-        for (int step = 0; step < XLEN * YLEN; step++) begin
-            static int nx, ny;
-			
-			map[y][x] = val++;
-            visited[y][x] = 1;
-
-            // Try current direction
-            nx = x + dx[dir];
-            ny = y + dy[dir];
-
-            // If invalid or visited, change direction
-            if (nx < 0 || nx >= XLEN || ny < 0 || ny >= YLEN || visited[ny][nx]) begin
-                dir = (dir + 1) % 4;
-                nx = x + dx[dir];
-                ny = y + dy[dir];
-            end
-
-            x = nx;
-            y = ny;
-        end
-    end */
-
-	initial begin
-  		ham_map[0][0] = 3'b000; // (0,0)
-  		ham_map[0][1] = 3'b001; // (1,0)
-  		ham_map[1][1] = 3'b010; // (1,1)
-  		ham_map[1][0] = 3'b011; // (0,1)
-	end
-
-	function automatic [$clog2(XLEN*YLEN)-1:0] get_hamiltonian_index(
-		input logic [$clog2(YLEN)-1:0] y,
-		input logic [$clog2(XLEN)-1:0] x
-	);
-		return ham_map[y][x];
-	endfunction
+// Serpentine (snake) Hamiltonian order: even rows L->R, odd rows R->L
+function automatic id_t get_hamiltonian_index(local_yx y, local_yx x);
+  id_t base = id_t'(y) * id_t'(XLEN);
+  if (y[0] == 1'b0)  // even row
+    return base + id_t'(x);
+  else               // odd row (reverse)
+    return base + id_t'((XLEN-1) - x);
+endfunction
 
 
    function noc_flit_type create_header
@@ -158,21 +87,35 @@ module gen
 	logic [$clog2(XLEN*YLEN)-1:0] hamiltonian_index_old;
 	logic [$clog2(XLEN*YLEN)-1:0] hamiltonian_index_new;
 	logic [NEXT_ROUTING_WIDTH-1:0] go_left, go_right;
-        logic [YX_WIDTH-1:0] id_rem, id_loc,dist_cw, dist_ccw;
+        logic [ID_WIDTH-1:0] id_rem, id_loc,dist_cw, dist_ccw;
       id_loc = get_hamiltonian_index( local_y,  local_x);
       id_rem = get_hamiltonian_index( remote_y,  remote_x);
       header = 0;
-      header[NOC_FLIT_SIZE - 1 : NOC_FLIT_SIZE - PREAMBLE_WIDTH] = preamble_header;
-//      header[NOC_FLIT_SIZE - PREAMBLE_WIDTH - 1 : NOC_FLIT_SIZE - PREAMBLE_WIDTH - YX_WIDTH] =  local_y;
-      header[NOC_FLIT_SIZE - PREAMBLE_WIDTH - 1 : NOC_FLIT_SIZE - PREAMBLE_WIDTH - YX_WIDTH] = id_loc;
-//      header[NOC_FLIT_SIZE - PREAMBLE_WIDTH - 2*YX_WIDTH - 1 : NOC_FLIT_SIZE - PREAMBLE_WIDTH - 3*YX_WIDTH] = remote_y;
-      header[NOC_FLIT_SIZE - PREAMBLE_WIDTH - YX_WIDTH - 1 : NOC_FLIT_SIZE - PREAMBLE_WIDTH - 2*YX_WIDTH] = id_rem;
-      header[NOC_FLIT_SIZE - PREAMBLE_WIDTH - 2*YX_WIDTH - 1 : NOC_FLIT_SIZE - PREAMBLE_WIDTH - 2*YX_WIDTH - MSG_TYPE_WIDTH] = msg_type;
-      header[NOC_FLIT_SIZE - PREAMBLE_WIDTH - 2*YX_WIDTH - MSG_TYPE_WIDTH - 1 : NOC_FLIT_SIZE - PREAMBLE_WIDTH - 2*YX_WIDTH - MSG_TYPE_WIDTH - RESERVED_WIDTH] = reserved;
-      header[NOC_FLIT_SIZE - PREAMBLE_WIDTH - 2*YX_WIDTH - MSG_TYPE_WIDTH - RESERVED_WIDTH - 1 : NOC_FLIT_SIZE - PREAMBLE_WIDTH - 2*YX_WIDTH - MSG_TYPE_WIDTH - RESERVED_WIDTH - 3] = local_y;	
-      header[NOC_FLIT_SIZE - PREAMBLE_WIDTH - 2*YX_WIDTH - MSG_TYPE_WIDTH - RESERVED_WIDTH - 4 : NOC_FLIT_SIZE - PREAMBLE_WIDTH - 2*YX_WIDTH - MSG_TYPE_WIDTH - RESERVED_WIDTH - 6] = local_x;	
-    
-/*	hamiltonian_index_old = get_hamiltonian_index(local_y, local_x);
+  header[NOC_FLIT_SIZE - 1 : NOC_FLIT_SIZE - PREAMBLE_WIDTH] = preamble_header;
+// id_loc (placed in a YX_WIDTH-wide field)
+header[NOC_FLIT_SIZE - PREAMBLE_WIDTH - 1
+       : NOC_FLIT_SIZE - PREAMBLE_WIDTH - YX_WIDTH] = local_yx'(id_loc);
+
+// id_rem (directly below id_loc, also YX_WIDTH wide)
+header[NOC_FLIT_SIZE - PREAMBLE_WIDTH - YX_WIDTH - 1
+       : NOC_FLIT_SIZE - PREAMBLE_WIDTH - 2*YX_WIDTH] = local_yx'(id_rem);
+
+// msg_type (below the two IDs)
+header[NOC_FLIT_SIZE - PREAMBLE_WIDTH - 2*YX_WIDTH - 1
+       : NOC_FLIT_SIZE - PREAMBLE_WIDTH - 2*YX_WIDTH - MSG_TYPE_WIDTH] = msg_type;
+
+// reserved
+header[NOC_FLIT_SIZE - PREAMBLE_WIDTH - 2*YX_WIDTH - MSG_TYPE_WIDTH - 1
+       : NOC_FLIT_SIZE - PREAMBLE_WIDTH - 2*YX_WIDTH - MSG_TYPE_WIDTH - RESERVED_WIDTH] = reserved;
+
+// local_y (YX_WIDTH) and local_x (YX_WIDTH) — keep at the same offsets
+header[NOC_FLIT_SIZE - PREAMBLE_WIDTH - 2*YX_WIDTH - MSG_TYPE_WIDTH - RESERVED_WIDTH - 1
+       : NOC_FLIT_SIZE - PREAMBLE_WIDTH - 2*YX_WIDTH - MSG_TYPE_WIDTH - RESERVED_WIDTH - YX_WIDTH] = local_y;
+
+header[NOC_FLIT_SIZE - PREAMBLE_WIDTH - 2*YX_WIDTH - MSG_TYPE_WIDTH - RESERVED_WIDTH - YX_WIDTH - 1
+       : NOC_FLIT_SIZE - PREAMBLE_WIDTH - 2*YX_WIDTH - MSG_TYPE_WIDTH - RESERVED_WIDTH - 2*YX_WIDTH] = local_x;
+
+  /*	hamiltonian_index_old = get_hamiltonian_index(local_y, local_x);
         hamiltonian_index_new = get_hamiltonian_index(remote_y, remote_x);
 
     if (hamiltonian_index_new >= hamiltonian_index_old) begin
@@ -358,12 +301,15 @@ $display("id_rem:%b , id_loc: %b, local_y: %b, local_x: %b, remote_y: %b, remote
 		     incr_total_snd[i][dst_next[i]] = 1'b1;
 		     sample_dst[i] = 1'b1;
 		     input_req[i] = 1'b1;
-		     input_data[i] = create_header(tile_y[i],
+		    /* input_data[i] = create_header(tile_y[i],
 						   tile_x[i],
 						   tile_y[dst_next[i]],
 						   tile_x[dst_next[i]],
 						   3'b111,
-						   snd_count[i][RESERVED_WIDTH-1:0]);
+						   snd_count[i][RESERVED_WIDTH-1:0]);*/
+		input_data[i]=	create_header(idx_to_y(id_t'(i)), idx_to_x(id_t'(i)),
+              idx_to_y(dst_next[i]), idx_to_x(dst_next[i]),
+              3'b111, snd_count[i][RESERVED_WIDTH-1:0]);
 		     input_data[i][NOC_FLIT_SIZE-1:NOC_FLIT_SIZE-2] = preamble_1flit;
 		     $display("%t: Tile %d - Send %d", $time, i, dst_next[i]);
 	//		 $display("%t: Tile %d - Send %d | input_req_single [%d] = %d", $time, i, dst_next[i], i, input_req[i]);
@@ -377,12 +323,15 @@ $display("id_rem:%b , id_loc: %b, local_y: %b, local_x: %b, remote_y: %b, remote
 			incr_total_snd[i][dst_next[i]] = 1'b1;
 			sample_dst[i] = 1'b1;
 			input_req[i] = 1'b1;
-			input_data[i] = create_header(tile_y[i],
+		/*	input_data[i] = create_header(tile_y[i],
 						      tile_x[i],
 						      tile_y[dst_next[i]],
 						      tile_x[dst_next[i]],
 						      3'b111,
-						      snd_count[i][RESERVED_WIDTH-1:0]);
+						      snd_count[i][RESERVED_WIDTH-1:0]);*/
+			input_data[i] =	     create_header(idx_to_y(id_t'(i)), idx_to_x(id_t'(i)),
+              idx_to_y(dst_next[i]), idx_to_x(dst_next[i]),
+              3'b111, snd_count[i][RESERVED_WIDTH-1:0]);
 			 $display("%t: Tile %d - Send %d", $time, i, dst_next[i]);
 		//	$display("%t: Tile %d - Send %d | input_req_head [%d] = %d", $time, i, dst_next[i], i, input_req[i]);
  		     end // if (input_ack[i])
@@ -451,8 +400,18 @@ $display("id_rem:%b , id_loc: %b, local_y: %b, local_x: %b, remote_y: %b, remote
 	 assign new_packet[i] = output_data[i][NOC_FLIT_SIZE-1] & new_flit[i];
 	// assign src_next[i] = output_data[i][NOC_FLIT_SIZE - PREAMBLE_WIDTH - 1:NOC_FLIT_SIZE - PREAMBLE_WIDTH - YX_WIDTH] * XLEN +
 	//assign src_next[i] =  output_data[i][NOC_FLIT_SIZE - PREAMBLE_WIDTH - 2*YX_WIDTH - MSG_TYPE_WIDTH - RESERVED_WIDTH - 1 : NOC_FLIT_SIZE - PREAMBLE_WIDTH - 2*YX_WIDTH - MSG_TYPE_WIDTH - RESERVED_WIDTH - 3];
-	assign src_next[i] = output_data[i][NOC_FLIT_SIZE - PREAMBLE_WIDTH - 2*YX_WIDTH - MSG_TYPE_WIDTH - RESERVED_WIDTH - 1 : NOC_FLIT_SIZE - PREAMBLE_WIDTH - 2*YX_WIDTH - MSG_TYPE_WIDTH - RESERVED_WIDTH - 3] *XLEN
-                          + output_data[i][NOC_FLIT_SIZE - PREAMBLE_WIDTH - 2*YX_WIDTH - MSG_TYPE_WIDTH - RESERVED_WIDTH - 4 : NOC_FLIT_SIZE - PREAMBLE_WIDTH - 2*YX_WIDTH - MSG_TYPE_WIDTH - RESERVED_WIDTH - 6];
+
+	logic [YX_WIDTH-1:0] rx_y, rx_x;
+
+assign rx_y = output_data[i]
+  [NOC_FLIT_SIZE - PREAMBLE_WIDTH - 2*YX_WIDTH - MSG_TYPE_WIDTH - RESERVED_WIDTH - 1
+   : NOC_FLIT_SIZE - PREAMBLE_WIDTH - 2*YX_WIDTH - MSG_TYPE_WIDTH - RESERVED_WIDTH - YX_WIDTH];
+
+assign rx_x = output_data[i]
+  [NOC_FLIT_SIZE - PREAMBLE_WIDTH - 2*YX_WIDTH - MSG_TYPE_WIDTH - RESERVED_WIDTH - YX_WIDTH - 1
+   : NOC_FLIT_SIZE - PREAMBLE_WIDTH - 2*YX_WIDTH - MSG_TYPE_WIDTH - RESERVED_WIDTH - 2*YX_WIDTH];
+
+assign src_next[i] = id_t'(rx_y) * id_t'(XLEN) + id_t'(rx_x);
 
   /* logic [YX_WIDTH-1:0] rx_y, rx_x;
     // extract exactly where you packed them in create_header():
