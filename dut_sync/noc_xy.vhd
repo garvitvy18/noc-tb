@@ -136,26 +136,23 @@ architecture ring of noc_xy is
     return y*XLEN + x;
   end;
 
-  -- Build a serpentine (snake) order that visits every tile exactly once.
-  -- Even rows:  x = 0 .. XLEN-1
-  -- Odd rows:   x = XLEN-1 .. 0
-  function build_ring_order(XLEN, YLEN : integer) return int_vec is
-    variable order : int_vec(0 to XLEN*YLEN-1);
-    variable p     : integer := 0;
-  begin
-    for y in 0 to YLEN-1 loop
-      if (y mod 2) = 0 then
-        for x in 0 to XLEN-1 loop
-          order(p) := id_of_xy(x, y, XLEN); p := p + 1;
-        end loop;
-      else
-        for x in XLEN-1 downto 0 loop
-          order(p) := id_of_xy(x, y, XLEN); p := p + 1;
-        end loop;
-      end if;
-    end loop;
-    return order;
-  end;
+function build_ring_order(XLEN, YLEN : integer) return int_vec is
+  variable order : int_vec(0 to XLEN*YLEN-1);
+  variable p     : integer := 0;
+begin
+  for x in 0 to XLEN-1 loop
+    if (x mod 2) = 0 then
+      for y in 0 to YLEN-1 loop
+        order(p) := id_of_xy(x, y, XLEN);  p := p + 1;
+      end loop;
+    else
+      for y in YLEN-1 downto 0 loop
+        order(p) := id_of_xy(x, y, XLEN);  p := p + 1;
+      end loop;
+    end if;
+  end loop;
+  return order;
+end;
 
 
   -- For each tile k, who is the next tile on the ring?

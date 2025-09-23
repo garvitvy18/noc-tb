@@ -61,13 +61,15 @@ function automatic local_yx idx_to_y(id_t i);
 endfunction
 
 // Serpentine (snake) Hamiltonian order: even rows L->R, odd rows R->L
+// Column-serpentine ring index: even x -> y:0..YLEN-1, odd x -> y:YLEN-1..0
 function automatic id_t get_hamiltonian_index(local_yx y, local_yx x);
-  id_t base = id_t'(y) * id_t'(XLEN);
-  if (y[0] == 1'b0)  // even row
-    return base + id_t'(x);
-  else               // odd row (reverse)
-    return base + id_t'((XLEN-1) - x);
+  id_t col_base = id_t'(x) * id_t'(YLEN);
+  if (x[0] == 1'b0)        // even column
+    return col_base + id_t'(y);
+  else                     // odd column (reverse)
+    return col_base + id_t'((YLEN-1) - y);
 endfunction
+
 
 
    function noc_flit_type create_header
@@ -278,12 +280,22 @@ $display("id_rem:%b , id_loc: %b, local_y: %b, local_x: %b, remote_y: %b, remote
 	 end // block: xorshift64star
 	 assign psr_next[i] = psr_state_next[i] * 64'h2545F4914F6CDD1D;
 
-	 always_comb begin
-	    dst_next[i] = psr_next[i][$clog2(TILES_NUM)-1:0];
-	    if (psr_next[i][$clog2(TILES_NUM)-1:0] == i)
-	      dst_next[i] = i + 1;
-	 end
+//	 always_comb begin
+//	    dst_next[i] = psr_next[i][$clog2(TILES_NUM)-1:0];
+//	    if (psr_next[i][$clog2(TILES_NUM)-1:0] == i)
+//	      dst_next[i] = i + 1;
+//	 end
 
+always_comb begin
+  id_t rnd;
+  rnd = id_t'(psr_next[i] % TILES_NUM);           // 0..5 for 2×3
+  dst_next[i] = (rnd == i) ? id_t'((i + 1) % TILES_NUM) // avoid self
+                           : rnd;
+
+  // Optional safety
+  assert (dst_next[i] < TILES_NUM)
+    else $error("dst_next[%0d]=%0d >= TILES_NUM=%0d", i, dst_next[i], TILES_NUM);
+end
 	 // Send flit
 	 always_comb begin
 	    input_req[i] = 1'b0; // No request by default
