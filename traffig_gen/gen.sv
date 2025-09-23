@@ -27,13 +27,13 @@ module gen
    const logic [1:0] preamble_1flit = 2'b10;
 
    // NoC Size --> Begin
-   localparam int unsigned XLEN      = 2;
-   localparam int unsigned YLEN      = 2;
+   localparam int unsigned XLEN      = 4;
+   localparam int unsigned YLEN      = 3;
    localparam int unsigned TILES_NUM = XLEN*YLEN;
    // NoC Size --> End
 
    // Coordinate and ID widths (parametric)
-localparam int unsigned YX_WIDTH = 3;
+localparam int unsigned YX_WIDTH = 4;
    localparam int unsigned ID_WIDTH  = $clog2(TILES_NUM);
 
    typedef logic [YX_WIDTH-1:0] local_yx;

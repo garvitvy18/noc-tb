@@ -7,15 +7,15 @@ package noc;
     //
 
     // Coordinates
-    parameter int unsigned xMax = 8;
-    parameter int unsigned yMax = 8;
+    parameter int unsigned xMax = 16;
+    parameter int unsigned yMax = 16;
 
     // Message Type
     parameter int unsigned messageTypeWidth = 5;
 	
     //
     //Ring Size Parameter
-    parameter int unsigned kRingSize = 4;
+    parameter int unsigned kRingSize = 12;
 
     //
     // Direction constants, types and functions

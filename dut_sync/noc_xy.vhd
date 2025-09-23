@@ -33,9 +33,9 @@ use work.nocpackage.all;
 
 entity noc_xy is
   generic (
-    XLEN      : integer := 2;
-    YLEN      : integer := 2;
-    TILES_NUM : integer := 4;
+    XLEN      : integer := 4;
+    YLEN      : integer := 3;
+    TILES_NUM : integer :=12;
     flit_size : integer := 34);
 
   port (
@@ -56,7 +56,7 @@ end noc_xy;
 architecture ring of noc_xy is
 
   type ports_vec is array (TILES_NUM-1 downto 0) of std_logic_vector(2 downto 0);
-  type local_vec is array (TILES_NUM-1 downto 0) of local_yx;
+  type local_vec is array (TILES_NUM-1 downto 0) of std_logic_vector(3 downto 0);
   type handshake_vec is array (TILES_NUM-1 downto 0) of
     std_logic_vector(2 downto 0);
   type int_vec is array (natural range <>) of integer;
@@ -183,7 +183,7 @@ function build_ring_localx(order : int_vec) return local_vec is
   variable v : local_vec;  -- local_vec is already constrained by TILES_NUM
 begin
   for i in 0 to order'length-1 loop
-    v(order(i)) := conv_std_logic_vector(i, 3);  -- keep 3-bit width as before
+    v(order(i)) := conv_std_logic_vector(i, 4);  -- keep 3-bit width as before
   end loop;
   return v;
 end;
@@ -208,7 +208,7 @@ end;
     port (
       clk           : in  std_logic;
       rst           : in  std_logic;
-      CONST_localx  : in  std_logic_vector(2 downto 0);
+      CONST_localx  : in  std_logic_vector(3 downto 0);
 --      CONST_localy  : in  std_logic_vector(2 downto 0);
      -- data_n_in     : in  std_logic_vector(width-1 downto 0);
      -- data_s_in     : in  std_logic_vector(width-1 downto 0);
