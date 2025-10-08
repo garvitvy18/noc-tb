@@ -35,88 +35,97 @@ module lookahead_routing_multicast #(
     output noc::direction_t next_routing
 );
 
-    logic [4:0] testing_local_west;
-    logic [4:0] testing_local_east;
-    logic [4:0] testing_local_north;
-    logic [4:0] testing_local_south;
-    logic [4:0] testing_local_local;
+    logic [2:0] testing_local_west;
+    logic [2:0] testing_local_east;
+  //  logic [2:0] testing_local_north;
+  //  logic [2:0] testing_local_south;
+    logic [2:0] testing_local_local;
 
     noc::direction_t [DEST_SIZE-1:0] routing_paths;
 
+    // Function to compute next routing direction based on ring topology
     function automatic noc::direction_t routing(input noc::xy_t next_position,
-                                                input noc::xy_t destination);
-        // Compute next routing: go East/West first, then North/South
-        noc::direction_t west, east, north, south, local1;
-
-        west = next_position.x > destination.x ?
-        //  00100 : 11011;
-        noc::goWest : ~noc::goWest;
-        east = next_position.x < destination.x ?
-        // 01000 : 10111;
-        noc::goEast : ~noc::goEast;
-        north = next_position.y > destination.y ?
-        //  01101 : 11110;
-        noc::goNorth | noc::goWest | noc::goEast : ~noc::goNorth;
-        south = next_position.y < destination.y ?
-        //  01110 : 11101;
-        noc::goSouth | noc::goWest | noc::goEast : ~noc::goSouth;
-
-        if (next_position.y == destination.y && next_position.x == destination.x)
-            local1.go_local = 1;
-
-        // Result is go_local when none of the above is true
-        routing             = west & east & north & south;
-
-        testing_local_west  = west;
-        testing_local_east  = east;
-        testing_local_north = north;
-        testing_local_south = south;
-        testing_local_local = local1;
+                                                input noc::xy_t destination,
+						input noc::direction_t current_routing);
+	noc::direction_t west,east;
+//	west = next_position.x>destination.x?noc::goWest:~noc::goWest;
+//	east = next_position.x<destination.x?noc::goEast:~noc::goEast;
+  /*      int dist_cw  = (destination.x - next_position.x + noc::kRingSize) % noc::kRingSize;
+        int dist_ccw = (next_position.x - destination.x + noc::kRingSize) % noc::kRingSize;
+        if (dist_cw == 0 && dist_ccw == 0)
+            routing = noc::goLocal; // Already at destination
+        else if (dist_cw <= dist_ccw) begin
+            east = noc::goEast; // 3'b010
+	    west = ~noc::goWest;
+	    routing=west&east;
+        end else begin
+            west = noc::goWest; // 3'b001
+	    east = ~noc::goEast;
+	    routing=west&east;
+        end
+*/
+	if(next_position.x == destination.x) begin
+		routing = noc::goLocal;
+	end
+	else
+		routing = current_routing;
+	
+//	else if (current_routing.go_west)
+//		routing = noc::goWest;
+        //routing=west&east;
+        // Determine clockwise (East) or counter-clockwise (West) based on destination
+       // if (position.x < destination.x) begin
+            // If destination is ahead in the ring, route clockwise (East)
+          //  routing = noc::goEast;  // Clockwise direction
+       // end else if (position.x > destination.x) begin
+            // If destination is behind in the ring, route counter-clockwise (West)
+           // routing = noc::goWest;  // Counter-clockwise direction
+            // If already at destination (same position), route locally
+          //  routing = noc::goLocal; // Stay at local port (no movement)
+       // end
     endfunction
 
-    // Compute next position for every possible routing except local port
-    noc::xy_t [3:0] next_position_d, next_position_q;
-    // North
-    assign next_position_d[noc::kNorthPort].x = position.x;
-    assign next_position_d[noc::kNorthPort].y = position.y - 1'b1;
-    // South
-    assign next_position_d[noc::kSouthPort].x = position.x;
-    assign next_position_d[noc::kSouthPort].y = position.y + 1'b1;
-    // West
-    assign next_position_d[noc::kWestPort].x  = position.x - 1'b1;
-    assign next_position_d[noc::kWestPort].y  = position.y;
-    // East
-    assign next_position_d[noc::kEastPort].x  = position.x + 1'b1;
-    assign next_position_d[noc::kEastPort].y  = position.y;
+     // Compute next position for each port (East, West, and Local directions)
+    noc::xy_t [1:0] next_position_d, next_position_q;
+    
+    // East (Clockwise) movement
+//    assign next_position_d[noc::kEastPort].x = position.x + 1'b1;  // Move to the next tile (East in the ring)
+    //assign next_position_d[noc::kEastPort].y = position.y;         // y-coordinate remains the same
 
-    always_ff @(posedge clk) begin
-        next_position_q <= next_position_d;
-    end
+    // West (Counter-clockwise) movement
+//    assign next_position_d[noc::kWestPort].x = position.x - 1'b1;  // Move to the previous tile (West in the ring)
+    //assign next_position_d[noc::kWestPort].y = position.y;         // y-coordinate remains the same
+
+    // Local movement (when already at the destination)
+    //assign next_position_d.x = position.x;         // Stay at the current tile
+    //assign next_position_d.y = position.y;         // y-coordinate remains the same
+assign next_position_d[noc::kEastPort].x = (position.x + 1) % noc::kRingSize;
+assign next_position_d[noc::kWestPort].x = (position.x + noc::kRingSize - 1) % noc::kRingSize;
 
     always_comb begin
         // The function processes routing for all destinations.
         // final next_routing is an OR of all the next_routing computations
-        next_routing = 5'b0;
+        next_routing = 3'b0;
         for (int rout_num = 0; rout_num < DEST_SIZE; rout_num++) begin
-            routing_paths[rout_num] = 5'b00000;
+            routing_paths[rout_num] = 3'b000;
         end
 
         for (int dest_num = 0; dest_num < DEST_SIZE; dest_num++) begin
             if (val[dest_num]) begin
                 unique case (current_routing)
-                    noc::goNorth:
+                /*    noc::goNorth:
                     routing_paths[dest_num] =
                         routing(next_position_q[noc::kNorthPort], destination[dest_num]);
                     noc::goSouth:
                     routing_paths[dest_num] =
-                        routing(next_position_q[noc::kSouthPort], destination[dest_num]);
+                        routing(next_position_q[noc::kSouthPort], destination[dest_num]); */
                     noc::goWest:
                     routing_paths[dest_num] =
-                        routing(next_position_q[noc::kWestPort], destination[dest_num]);
+                        routing(next_position_q[noc::kWestPort], destination[dest_num], current_routing);
                     noc::goEast:
                     routing_paths[dest_num] =
-                        routing(next_position_q[noc::kEastPort], destination[dest_num]);
-                    default: routing_paths[dest_num] = 5'b00000;
+                        routing(next_position_q[noc::kEastPort], destination[dest_num], current_routing);
+                    default: routing_paths[dest_num] = 3'b000;
                 endcase
             end
         end

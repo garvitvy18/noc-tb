@@ -3,7 +3,7 @@
 // There is no delay from request to grant.
 // The abriter assumes that the request remains stable while the entire
 // packet is forwarded. Hence, priority is updated whenever a tail flit
-// is forwarded. Grant is locked between a head flit and the corresponding
+// is forwarded. Grants locked between a head fli it and the corresponding
 // tail flit.
 //
 // Interface
@@ -30,17 +30,17 @@
 module router_mcast_arbiter (
     input  logic clk,
     input  logic rst,
-    input  logic [4:0] request,
-    input  logic [4:0] forwarding_head,
-    input  logic [4:0] forwarding_tail,
-    input  logic [4:0] reset_arbiter,
-    output logic [4:0] grant,
+    input  logic [2:0] request,
+    input  logic [2:0] forwarding_head,
+    input  logic [2:0] forwarding_tail,
+    input  logic [2:0] reset_arbiter,
+    output logic [2:0] grant,
     output logic grant_valid
 );
 
     logic grant_locked;
     logic forwarding_head_input, forwarding_tail_input;
-    logic [4:0] saved_grant;
+    logic [2:0] saved_grant;
     // Lock current grant for flit between head and tail, tail included
     always_ff @(posedge clk) begin
         if (rst | (|(reset_arbiter))) begin
@@ -62,18 +62,16 @@ module router_mcast_arbiter (
     assign grant_valid           = |request & ~grant_locked;
 
     // Update priority
-    typedef logic [4:0][4:0] priority_t;
+    typedef logic [1:0][1:0] priority_t;
     priority_t priority_mask, priority_mask_next;
     priority_t grant_stage1;
-    logic [4:0][2:0] grant_stage2;
+    logic [2:0] grant_stage2;
 
     // Higher priority is given to request[0] at reset
     localparam priority_t InitialPriority = {
-        5'b00000,  // request[4]
-        5'b10000,  // request[3]
-        5'b11000,  // request[2]
-        5'b11100,  // request[1]
-        5'b11110
+        3'b000,  // request[3]
+        3'b100,  // request[2]
+        3'b110  // request[1]
     };  // request[0]
 
     always_ff @(posedge clk) begin
@@ -88,56 +86,35 @@ module router_mcast_arbiter (
         priority_mask_next = priority_mask;
 
         unique case (grant)
-            5'b00001: begin
+            3'b001: begin
                 priority_mask_next[0]    = '0;
                 priority_mask_next[1][0] = 1'b1;
-                priority_mask_next[2][0] = 1'b1;
-                priority_mask_next[3][0] = 1'b1;
-                priority_mask_next[4][0] = 1'b1;
+                priority_mask_next[2][0] = 1'b1;                
             end
-            5'b00010: begin
+            3'b010: begin
                 priority_mask_next[1]    = '0;
                 priority_mask_next[0][1] = 1'b1;
                 priority_mask_next[2][1] = 1'b1;
-                priority_mask_next[3][1] = 1'b1;
-                priority_mask_next[4][1] = 1'b1;
+                
             end
-            5'b00100: begin
+            3'b100: begin
                 priority_mask_next[2]    = '0;
                 priority_mask_next[0][2] = 1'b1;
-                priority_mask_next[1][2] = 1'b1;
-                priority_mask_next[3][2] = 1'b1;
-                priority_mask_next[4][2] = 1'b1;
-            end
-            5'b01000: begin
-                priority_mask_next[3]    = '0;
-                priority_mask_next[0][3] = 1'b1;
-                priority_mask_next[1][3] = 1'b1;
-                priority_mask_next[2][3] = 1'b1;
-                priority_mask_next[4][3] = 1'b1;
-            end
-            5'b10000: begin
-                priority_mask_next[4]    = '0;
-                priority_mask_next[0][4] = 1'b1;
-                priority_mask_next[1][4] = 1'b1;
-                priority_mask_next[2][4] = 1'b1;
-                priority_mask_next[3][4] = 1'b1;
-            end
+                priority_mask_next[1][2] = 1'b1;              
+            end            
             default begin
             end
         endcase
     end
 
     genvar g_i, g_j;
-    for (g_i = 0; g_i < 5; g_i++) begin : gen_grant
+    for (g_i = 0; g_i < 3; g_i++) begin : gen_grant
 
-        for (g_j = 0; g_j < 5; g_j++) begin : gen_grant_stage1
+        for (g_j = 0; g_j < 3; g_j++) begin : gen_grant_stage1
             assign grant_stage1[g_i][g_j] = request[g_j] & priority_mask[g_j][g_i];
         end
 
-        assign grant_stage2[g_i][0] = ~(grant_stage1[g_i][0] | grant_stage1[g_i][1]);
-        assign grant_stage2[g_i][1] = ~(grant_stage1[g_i][2] | grant_stage1[g_i][3]);
-        assign grant_stage2[g_i][2] = ~(grant_stage1[g_i][4]);
+	 assign grant_stage2[g_i] = ~(grant_stage1[g_i][0] | grant_stage1[g_i][1] | grant_stage1[g_i][2]);
 
         assign grant[g_i]           = &grant_stage2[g_i] & request[g_i];
 
